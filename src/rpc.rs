@@ -1,28 +1,38 @@
+#[derive(Clone)]
+struct Server;
+struct Client;
+
+const TIMEOUT:u32 = 100; //TIMEOUT 
+
+pub use crate::trace;
+pub use crate::server::Server;
+use std::io;
+
 use futures::{
     future::{self, Ready},
     prelude::*,
 }
 
-use tarpc::{
-    client, context,
-    server::{self, Handler},
-};
+use std::net::{TcpListener, TcpStream};
 
-use std::io;
-
-#[tarpc::service]
-trait World {
-    async fn hello(name: String) -> String;
+pub enum SocketAddr {
+    V4(IPv4Addr),
+    V6(IPv6Addr),
 }
 
-#[derive(Clone)]
-struct HelloServer;
+impl RPC for Server {
+    type ReturnFut = Ready<String>;
 
-impl World for HelloServer {
-    type HelloFut = Ready<String>;
+    fn connect(self, ipaddr: SocketAddr) {
+        connection_timeout(ipaddr, TIMEOUT)
+    }
 
-    fn hello(self, _: context::Context, name: String) -> Self::HelloFut {
+    fn send(self, _: context::Context, name: String) -> Self::ReturnFut {
         future::ready(format!("Hello, {}!", name))
+    }
+
+    fn receive(self, _: context::Context) -> ReturnFut {
+        
     }
 }
 
