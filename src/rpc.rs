@@ -30,14 +30,15 @@ pub enum SocketAddr {
 
 /// RPC struct definition
 pub struct RPC {
-    msg_type: RPCType,
+    /*msg_type: RPCType,
     msg: /*Message*/, 
     sender: IPv6,
     receiver: IPv6,
-    token: /*Signature*/,
+    token: /*Signature*/,*/
+
 }
 
-impl RPC for Server {
+impl RPC {
     fn list_of_ipaddr (self) -> Vec {
         //returns a list of ip addrs
     }
@@ -66,9 +67,7 @@ impl RPC for Server {
     fn receive(self, _: context::Context) -> ReturnFut {
         
     }
-}
 
-impl RPC for Client {
     fn connecting(self, ipaddr: String, port: String) -> Result<(), Error> {
         let input = String::from(ipaddr + port);
         if let Ok(stream) = TcpStream::connect_timeout(input, TIMEOUT) {
