@@ -7,17 +7,18 @@
 //! built on top of this, but that is for later)
 
 
-pub fn ping (Node) -> Node {
+pub fn ping (node1: Node) -> Node {
+    /*Find Node spot in the dependency tree & check if it's there*/
 }
 
-pub fn store ((key, value)) -> Node {
+pub fn store (key: u64, value: u64) -> Node {
+    /*Inserts (key, value) into the DHT*/
 }
 
-pub fn find_node_with_id (Node_ID) -> Node {
+pub fn find_node (node_id: ID) -> Node {
+    /*Searches the tree and finds the corresponding Node to the node id*/
 }
 
-pub fn find_node_with_key (key) -> Node {
-}
-
-pub fn find_value (key) -> Node {
+pub fn find_value (key: u64) -> Node {
+    /*Search the tree and find the corresponding value to the key*/
 }   

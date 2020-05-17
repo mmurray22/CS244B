@@ -19,8 +19,7 @@ trait NodeTrait {
     fn create(size: u64, ip: String, port: u64) -> Node;
     fn destroy_node() -> Node;
     fn key_distance (node_id1: [u8; 20], node_id2: [u8; 20]) -> Bool;
-    fn node_state(self, args: u64, _ip: String, _port: u64) -> Node;
-    fn update_node_state (self, args: u64, _ip: String, _port: u64) -> Bool;
+    fn update_node_state (self, args: u64, _ip: String, _port: u64, _value: u64) -> Bool;
     fn update_k_bucket () -> Bool;
     fn store_value () -> Bool;
 }
@@ -31,12 +30,18 @@ struct ID([u8; BIT_SLICES]); /*TODO: incorporate SHA1 hash/change to bit arrays 
 
 trait IDTrait {
     fn get_id(self) -> ID;
+    fn get_key_hash(key: u64) -> ID;
     fn XOR(id1: ID, id2: ID) -> ID;
 }
 
 impl IDTrait for ID {
     fn get_id(self) -> ID {
         self.0  
+    }
+    fn get_key_hash(key: u64) -> ID {
+        let mut hasher = Sha1::new();
+        hasher.input_str(key);
+        hasher.result()
     }
 
     fn XOR(id1: ID, id2: ID) -> ID {
@@ -57,9 +62,13 @@ impl NodeTrait for Node {
     pub fn new (size: u64, ip: String, port: u64) -> Node {
         let mut node = Box::<Node>::new_uninit();
         let node = unsafe {
-            node.
+            node.node_id.as_mut_ptr().write(get_random_node_id());
+            node.ip.as_mut_ptr().write(ip);
+            node.port.as_mut_ptr().write(port);
+            node.value.as_mut_ptr().write();
+            node.kbuckets.as_mut_ptr().write();
+            node.assume_init()
         };
-        Node(get_random_node_id(), ip, port);
     }
 
     pub fn destroy_node(destroy_node: Node) -> Node {
@@ -70,7 +79,7 @@ impl NodeTrait for Node {
         ID::XOR(ID(node_id1), ID(node_id2))
     }
 
-    pub fn update_node_state(self, args: u64, _ip: String, _port: u64) -> Bool {
+    pub fn update_node_state(self, args: u64, _ip: String, _port: u64, _value: u64) -> Bool {
         if (args == 1) { // 01 = ip changed, port not changed
             self.ip = _ip;
         } else if (args == 2) { //10 = port changed, ip not changed
