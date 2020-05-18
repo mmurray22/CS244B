@@ -4,14 +4,14 @@ use std::alloc::oom;
 use std::boxed::Box;
 use self::crypto::digest::Digest;
 use self::crypto::sha1::Sha1;
+use queues::*;
 
-//! TODO Consider if keys will be stored using crypto hashes (they should be)
 struct Node {
     node_id: [u8; 20],
     ip: String,
     port: u64,
     value: u64,
-    kbuckets: Vec<Vec<Node>> //TODO: What type should be inside the Vector?
+    kbuckets: Vec<Queue<Node>> //TODO: What type should be inside the Vector?
 }
 
 trait NodeTrait {
@@ -29,8 +29,8 @@ const BIT_SLICES: u64 = 20;
 struct ID([u8; BIT_SLICES]); /*TODO: incorporate SHA1 hash/change to bit arrays in rust*/
 
 trait IDTrait {
-    fn get_id(self) -> ID;
-    fn get_key_hash(key: u64) -> ID;
+    fn get_id(self) -> ID; /**/
+    fn get_key_hash(key: u64) -> ID; /*Sha1 Hashes key*/
     fn XOR(id1: ID, id2: ID) -> ID;
 }
 
@@ -65,14 +65,15 @@ impl NodeTrait for Node {
             node.node_id.as_mut_ptr().write(get_random_node_id());
             node.ip.as_mut_ptr().write(ip);
             node.port.as_mut_ptr().write(port);
-            node.value.as_mut_ptr().write();
-            node.kbuckets.as_mut_ptr().write();
+            node.value.as_mut_ptr().write(0);
+            node.kbuckets.as_mut_ptr().write(/*How do I define a k bucket?*/);
             node.assume_init()
         };
+        node
     }
 
     pub fn destroy_node(destroy_node: Node) -> Node {
-        /*TODO Deallocate node*/          
+                   
     }
 
     pub fn key_distance (node_id1: [u8; 20], node_id2: [u8; 20]) -> Bool {

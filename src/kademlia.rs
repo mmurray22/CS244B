@@ -6,7 +6,7 @@
 //! the Kademlia DHT (and for actual real users another layer will be
 //! built on top of this, but that is for later)
 
-
+//!TODO Questions which need to be answered: Are we little or big endian?
 pub fn ping (node1: Node) -> Node {
     /*Find Node spot in the dependency tree & check if it's there*/
 }

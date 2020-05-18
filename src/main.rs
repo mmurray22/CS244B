@@ -1,4 +1,9 @@
-
+fn main () -> u64 {
+    println!("Start of the main function!");
+    /*Stuff? Idk what lol*/
+    println!("End of the main function!");
+    0
+}
 
 
 async fn main() -> io::Result<()> {
