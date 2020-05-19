@@ -7,18 +7,20 @@
 //! built on top of this, but that is for later)
 
 //!TODO Questions which need to be answered: Are we little or big endian?
-pub fn ping (node1: Node) -> Node {
+#[path = "./nodes.rs"] mod nodes;
+
+pub fn ping (node1: nodes::Node) /*-> nodes::Node*/ {
     /*Find Node spot in the dependency tree & check if it's there*/
 }
 
-pub fn store (key: u64, value: u64) -> Node {
+pub fn store (key: u64, value: u64) /*-> nodes::Node*/ {
     /*Inserts (key, value) into the DHT*/
 }
 
-pub fn find_node (node_id: ID) -> Node {
+pub fn find_node (node_id: nodes::ID) /*-> nodes::Node*/ {
     /*Searches the tree and finds the corresponding Node to the node id*/
 }
 
-pub fn find_value (key: u64) -> Node {
+pub fn find_value (key: u64) /*-> nodes::Node*/ {
     /*Search the tree and find the corresponding value to the key*/
 }   

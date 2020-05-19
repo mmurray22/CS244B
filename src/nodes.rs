@@ -1,32 +1,37 @@
 #![feature(alloc)]
-use std::mem;
-use std::alloc::oom;
+use crypto::digest::Digest;
+use crypto::sha1::Sha1;
 use std::boxed::Box;
-use self::crypto::digest::Digest;
-use self::crypto::sha1::Sha1;
-use queues::*;
+use queue::*;
 
-struct Node {
+const K_CONST: u64 = 20; //Maximum length of kbuckets
+
+struct KeyValuePair {
+    key: u64,
+    value: u64
+}
+
+pub struct Node {
     node_id: [u8; 20],
     ip: String,
     port: u64,
-    value: u64,
+    storage: Vec<KeyValuePair>,
     kbuckets: Vec<Queue<Node>> //TODO: What type should be inside the Vector?
 }
 
 trait NodeTrait {
     fn get_random_node_id () -> ID;
-    fn create(size: u64, ip: String, port: u64) -> Node;
-    fn destroy_node() -> Node;
-    fn key_distance (node_id1: [u8; 20], node_id2: [u8; 20]) -> Bool;
-    fn update_node_state (self, args: u64, _ip: String, _port: u64, _value: u64) -> Bool;
-    fn update_k_bucket () -> Bool;
-    fn store_value () -> Bool;
+    fn new (self, size: u64, ip: String, port: u64) -> Node;
+    fn destroy_node(destroy_node: Node) -> bool;
+    fn key_distance (node_id1: [u8; 20], node_id2: [u8; 20]) -> ID;
+    fn update_node_state (self, args: u64, _ip: String, _port: u64, _value: u64) -> bool;
+    fn update_k_bucket (/*what variables go in here?*/) -> bool;
+    fn store_value (key: u64, value: u64) -> bool;
 }
 
-const BIT_SLICES: u64 = 20;   
+const BIT_SLICES: usize = 20;   
 
-struct ID([u8; BIT_SLICES]); /*TODO: incorporate SHA1 hash/change to bit arrays in rust*/
+pub struct ID([u8; BIT_SLICES]); /*TODO: incorporate SHA1 hash/change to bit arrays in rust*/
 
 trait IDTrait {
     fn get_id(self) -> ID; /**/
@@ -36,33 +41,33 @@ trait IDTrait {
 
 impl IDTrait for ID {
     fn get_id(self) -> ID {
-        self.0  
+        ID(self.0)  
     }
     fn get_key_hash(key: u64) -> ID {
         let mut hasher = Sha1::new();
-        hasher.input_str(key);
+        hasher.input(key);
         hasher.result()
     }
 
     fn XOR(id1: ID, id2: ID) -> ID {
        let mut tempID = [0; BIT_SLICES];
        for i in 0..BIT_SLICES {
-            tempID[i] = id1[i]^id2[i];
+            tempID[i] = id1.0[i]^id2.0[i];
        }
-       tempID
+       ID(tempID)
     }
 }
 
 impl NodeTrait for Node {
-    pub fn get_random_node_id() -> ID {
+    fn get_random_node_id() -> ID {
         let array: [u8; BIT_SLICES] = rand::random();
         ID(array)
     }
 
-    pub fn new (size: u64, ip: String, port: u64) -> Node {
+    fn new (self, size: u64, ip: String, port: u64) -> Node {
         let mut node = Box::<Node>::new_uninit();
         let node = unsafe {
-            node.node_id.as_mut_ptr().write(get_random_node_id());
+            node.node_id.as_mut_ptr().write(self.get_random_node_id());
             node.ip.as_mut_ptr().write(ip);
             node.port.as_mut_ptr().write(port);
             node.value.as_mut_ptr().write(0);
@@ -72,26 +77,34 @@ impl NodeTrait for Node {
         node
     }
 
-    pub fn destroy_node(destroy_node: Node) -> Node {
-                   
+    fn destroy_node(destroy_node: Node) -> bool {
+        /*TODO LIFETIMES*/
+        /*Need to add to this body->I don't think you explicitly destroy nodes*/  
+        true
     }
 
-    pub fn key_distance (node_id1: [u8; 20], node_id2: [u8; 20]) -> Bool {
+    fn key_distance (node_id1: [u8; 20], node_id2: [u8; 20]) -> ID {
         ID::XOR(ID(node_id1), ID(node_id2))
     }
 
-    pub fn update_node_state(self, args: u64, _ip: String, _port: u64, _value: u64) -> Bool {
-        if (args == 1) { // 01 = ip changed, port not changed
+    fn update_node_state(self, args: u64, _ip: String, _port: u64, _value: u64) -> bool {
+        if args == 1 { // 01 = ip changed, port not changed
             self.ip = _ip;
-        } else if (args == 2) { //10 = port changed, ip not changed
+        } else if args == 2 { //10 = port changed, ip not changed
             self.port = _port;
-        } else if (args == 3) { //11 = ip, port both changed
+        } else if args == 3 { //11 = ip, port both changed
             self.ip = _ip;
             self.port = _port;
         }
+        true
     }
 
-    pub fn update_k_bucket () -> Bool {
+    fn update_k_bucket () -> bool {
+        true
         /*Determine whether or not */ 
+    }
+
+    fn store_value (key: u64, value: u64) -> bool {
+        true
     }
 }

@@ -1,12 +1,23 @@
-fn main () -> u64 {
+extern crate crypto;
+extern crate rand;
+extern crate queue;
+
+mod nodes;
+//mod kademlia;
+//mod routing;
+
+fn main () -> () {
     println!("Start of the main function!");
-    /*Stuff? Idk what lol*/
+    /*Make Node with an ID*/
+    /**/
+    /**/
+    /**/
+    /**/
     println!("End of the main function!");
-    0
 }
 
 
-async fn main() -> io::Result<()> {
+/*async fn main_test() -> io::Result<()> {
     let (client_transport, server_transport) = tarpc::transport::channel::unbounded();
     
     let server = server::new(server::Config::default())
@@ -22,5 +33,4 @@ async fn main() -> io::Result<()> {
     println!("{}", hello);
 
     Ok(())
-
-}
+}*/
