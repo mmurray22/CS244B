@@ -1,13 +1,10 @@
-#![feature(alloc)]
+#[allow(non_snake_case)]
 use crypto::digest::Digest;
 use crypto::sha1::Sha1;
-//use std::boxed::Box;
-use std::mem;
-use queue::*;
 
 const K_CONST: u64 = 20; //Maximum length of kbuckets
 
-struct KeyValuePair {
+struct Pair {
     key: u64,
     value: u64
 }
@@ -22,8 +19,8 @@ pub struct Node {
 
 trait NodeTrait {
     fn get_random_node_id () -> ID;
-    fn new (self, id1: ID, size: u64, ip: String, port: u64) -> Box<Node>;
-    fn destroy_node(destroy_node: Node) -> bool;
+    fn new (self, id1: ID, ip: String, port: u64) -> Box<Node>;
+    fn destroy_node(_destroy_node: Node) -> bool;
     fn key_distance (node_id1: [u8; 20], node_id2: [u8; 20]) -> ID;
     fn update_node_state (self, args: u64, _ip: String, _port: u64, _value: u64) -> bool;
     fn update_k_bucket (/*what variables go in here?*/) -> bool;
@@ -36,26 +33,26 @@ pub struct ID([u8; BIT_SLICES]); /*TODO: incorporate SHA1 hash/change to bit arr
 
 trait IDTrait {
     fn get_id(self) -> ID; /**/
-    fn get_key_hash(key: String) -> String; /*Sha1 Hashes key*/
-    fn XOR(id1: ID, id2: ID) -> ID;
+    fn get_key_hash(key: u64, res: &mut [u8]); /*Sha1 Hashes key*/
+    fn xor(id1: ID, id2: ID) -> ID;
 }
 
 impl IDTrait for ID {
     fn get_id(self) -> ID {
         ID(self.0)  
     }
-    fn get_key_hash(key: String) -> String {
+    fn get_key_hash(key: u64, res: &mut [u8]) {
         let mut hasher = Sha1::new();
-        hasher.input_str(&key);
-        hasher.result_str()
+        hasher.input(&key.to_ne_bytes());
+        hasher.result(res);
     }
 
-    fn XOR(id1: ID, id2: ID) -> ID {
-       let mut tempID = [0; BIT_SLICES];
+    fn xor(id1: ID, id2: ID) -> ID {
+       let mut temp_id = [0; BIT_SLICES];
        for i in 0..BIT_SLICES {
-            tempID[i] = id1.0[i]^id2.0[i];
+            temp_id[i] = id1.0[i]^id2.0[i];
        }
-       ID(tempID)
+       ID(temp_id)
     }
 }
 
@@ -65,7 +62,7 @@ impl NodeTrait for Node {
         ID(array)
     }
 
-    fn new (self, id1: ID, size: u64, ip: String, port: u64) -> Box<Node> {
+    fn new (self, id1: ID, ip: String, port: u64) -> Box<Node> {
         let node = Box::new(Node{
                                     node_id: id1,
                                     ip: ip,
@@ -75,14 +72,14 @@ impl NodeTrait for Node {
         node
     }
 
-    fn destroy_node(destroy_node: Node) -> bool {
+    fn destroy_node(_destroy_node: Node) -> bool {
         /*TODO LIFETIMES*/
         /*Need to add to this body->I don't think you explicitly destroy nodes*/  
         true
     }
 
     fn key_distance (node_id1: [u8; 20], node_id2: [u8; 20]) -> ID {
-        ID::XOR(ID(node_id1), ID(node_id2))
+        ID::xor(ID(node_id1), ID(node_id2))
     }
 
     fn update_node_state(mut self, args: u64, _ip: String, _port: u64, _value: u64) -> bool {
@@ -102,7 +99,8 @@ impl NodeTrait for Node {
         /*Determine whether or not */ 
     }
 
-    fn store_value (key: u64, value: u64) -> bool {
+    fn store_value (key: u64, val: u64) -> bool {
+        let pair = Pair{key: key, value: val};
         true
     }
 }
