@@ -1,0 +1,5 @@
+# Ignore built targets.
+target/*
+
+# Ignore the Cargo.lock file.
+Cargo.lock
