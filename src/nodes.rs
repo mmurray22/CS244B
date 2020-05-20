@@ -1,7 +1,8 @@
 #![feature(alloc)]
 use crypto::digest::Digest;
 use crypto::sha1::Sha1;
-use std::boxed::Box;
+//use std::boxed::Box;
+use std::mem;
 use queue::*;
 
 const K_CONST: u64 = 20; //Maximum length of kbuckets
@@ -12,16 +13,16 @@ struct KeyValuePair {
 }
 
 pub struct Node {
-    node_id: [u8; 20],
+    node_id: ID,
     ip: String,
     port: u64,
-    storage: Vec<KeyValuePair>,
-    kbuckets: Vec<Queue<Node>> //TODO: What type should be inside the Vector?
+    //storage: Vec<KeyValuePair>,
+    //kbuckets: Vec<Queue<Node>> //TODO: What type should be inside the Vector?
 }
 
 trait NodeTrait {
     fn get_random_node_id () -> ID;
-    fn new (self, size: u64, ip: String, port: u64) -> Node;
+    fn new (self, id1: ID, size: u64, ip: String, port: u64) -> Box<Node>;
     fn destroy_node(destroy_node: Node) -> bool;
     fn key_distance (node_id1: [u8; 20], node_id2: [u8; 20]) -> ID;
     fn update_node_state (self, args: u64, _ip: String, _port: u64, _value: u64) -> bool;
@@ -35,7 +36,7 @@ pub struct ID([u8; BIT_SLICES]); /*TODO: incorporate SHA1 hash/change to bit arr
 
 trait IDTrait {
     fn get_id(self) -> ID; /**/
-    fn get_key_hash(key: u64) -> ID; /*Sha1 Hashes key*/
+    fn get_key_hash(key: String) -> String; /*Sha1 Hashes key*/
     fn XOR(id1: ID, id2: ID) -> ID;
 }
 
@@ -43,10 +44,10 @@ impl IDTrait for ID {
     fn get_id(self) -> ID {
         ID(self.0)  
     }
-    fn get_key_hash(key: u64) -> ID {
+    fn get_key_hash(key: String) -> String {
         let mut hasher = Sha1::new();
-        hasher.input(key);
-        hasher.result()
+        hasher.input_str(&key);
+        hasher.result_str()
     }
 
     fn XOR(id1: ID, id2: ID) -> ID {
@@ -64,16 +65,13 @@ impl NodeTrait for Node {
         ID(array)
     }
 
-    fn new (self, size: u64, ip: String, port: u64) -> Node {
-        let mut node = Box::<Node>::new_uninit();
-        let node = unsafe {
-            node.node_id.as_mut_ptr().write(self.get_random_node_id());
-            node.ip.as_mut_ptr().write(ip);
-            node.port.as_mut_ptr().write(port);
-            node.value.as_mut_ptr().write(0);
-            node.kbuckets.as_mut_ptr().write(/*How do I define a k bucket?*/);
-            node.assume_init()
-        };
+    fn new (self, id1: ID, size: u64, ip: String, port: u64) -> Box<Node> {
+        let node = Box::new(Node{
+                                    node_id: id1,
+                                    ip: ip,
+                                    port: port,
+                                //0,
+                                /*How do I define a kbuckt?*/});
         node
     }
 
@@ -87,7 +85,7 @@ impl NodeTrait for Node {
         ID::XOR(ID(node_id1), ID(node_id2))
     }
 
-    fn update_node_state(self, args: u64, _ip: String, _port: u64, _value: u64) -> bool {
+    fn update_node_state(mut self, args: u64, _ip: String, _port: u64, _value: u64) -> bool {
         if args == 1 { // 01 = ip changed, port not changed
             self.ip = _ip;
         } else if args == 2 { //10 = port changed, ip not changed
