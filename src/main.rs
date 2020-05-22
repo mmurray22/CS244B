@@ -2,13 +2,17 @@ extern crate crypto;
 extern crate rand;
 extern crate queue;
 
-mod nodes;
-//mod kademlia;
+pub mod nodes;
+pub mod kademlia;
 //mod routing;
+
+use nodes::NodeTrait;
 
 fn main () -> () {
     println!("Start of the main function!");
-    /*Make Node with an ID*/
+    /*TODO: 1. Make Node with an ID*/
+    let ip = String::from("0.0.0.0");
+    let test_node : Box<nodes::Node> =  <nodes::Node as nodes::NodeTrait>::new(ip, 0);
     /**/
     /**/
     /**/

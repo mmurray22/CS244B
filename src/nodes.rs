@@ -1,6 +1,7 @@
 #[allow(non_snake_case)]
 use crypto::digest::Digest;
 use crypto::sha1::Sha1;
+use queue::*;
 
 const K_CONST: u64 = 20; //Maximum length of kbuckets
 
@@ -13,13 +14,12 @@ pub struct Node {
     node_id: ID,
     ip: String,
     port: u64,
-    //storage: Vec<KeyValuePair>,
-    //kbuckets: Vec<Queue<Node>> //TODO: What type should be inside the Vector?
+    storage: Vec<Pair>,
+    kbuckets: Vec<Queue<String>>,//TODO: What type should be inside the Vector?
 }
 
-trait NodeTrait {
-    fn get_random_node_id () -> ID;
-    fn new (self, id1: ID, ip: String, port: u64) -> Box<Node>;
+pub trait NodeTrait {
+    fn new (ip: String, port: u64) -> Box<Node>;
     fn destroy_node(_destroy_node: Node) -> bool;
     fn key_distance (node_id1: [u8; 20], node_id2: [u8; 20]) -> ID;
     fn update_node_state (self, args: u64, _ip: String, _port: u64, _value: u64) -> bool;
@@ -29,12 +29,13 @@ trait NodeTrait {
 
 const BIT_SLICES: usize = 20;   
 
-pub struct ID([u8; BIT_SLICES]); /*TODO: incorporate SHA1 hash/change to bit arrays in rust*/
+pub struct ID([u8; BIT_SLICES]);
 
 trait IDTrait {
     fn get_id(self) -> ID; /**/
     fn get_key_hash(key: u64, res: &mut [u8]); /*Sha1 Hashes key*/
     fn xor(id1: ID, id2: ID) -> ID;
+    fn get_random_node_id () -> ID;
 }
 
 impl IDTrait for ID {
@@ -54,21 +55,23 @@ impl IDTrait for ID {
        }
        ID(temp_id)
     }
-}
 
-impl NodeTrait for Node {
     fn get_random_node_id() -> ID {
         let array: [u8; BIT_SLICES] = rand::random();
         ID(array)
     }
 
-    fn new (self, id1: ID, ip: String, port: u64) -> Box<Node> {
+}
+
+impl NodeTrait for Node {
+    fn new (ip: String, port: u64) -> Box<Node> {
         let node = Box::new(Node{
-                                    node_id: id1,
-                                    ip: ip,
-                                    port: port,
-                                //0,
-                                /*How do I define a kbuckt?*/});
+                                 node_id: ID::get_random_node_id(),
+                                 ip: ip,
+                                 port: port,
+                                 storage: Vec::new(),
+                                 kbuckets: Vec::new(),
+                            });
         node
     }
 
