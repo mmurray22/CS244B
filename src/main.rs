@@ -3,20 +3,37 @@ extern crate rand;
 extern crate queue;
 
 pub mod nodes;
-pub mod kademlia;
+//pub mod kademlia;
 //mod routing;
-
-use nodes::NodeTrait;
 
 fn main () -> () {
     println!("Start of the main function!");
     /*TODO: 1. Make Node with an ID*/
     let ip = String::from("0.0.0.0");
-    let test_node : Box<nodes::Node> =  <nodes::Node as nodes::NodeTrait>::new(ip, 0);
-    /**/
-    /**/
-    /**/
-    /**/
+    let mut test_node : Box<nodes::Node> =  <nodes::Node as nodes::NodeTrait>::new(ip, 0);
+    let ip_print : String = <nodes::Node as nodes::NodeTrait>::get_ip(&test_node);
+    let port_print : u64 = <nodes::Node as nodes::NodeTrait>::get_port(&test_node);
+    let id_print : [u8; 20] = <nodes::Node as nodes::NodeTrait>::get_id(&test_node); 
+    println!("The node has IP {}", ip_print);
+    println!("The node has port {}", port_print);
+	println!("The ID is: ");
+	for x in &(id_print) {
+		print!("{}", x);
+	}
+	println!("");
+
+    /*TODO 2. Store a value in the node*/
+	let key = 20;
+	let val = 20;
+    //NOTE: The below function should eventually never be used outside of kademlia.rs; below is
+    //just a test
+    let res : bool = <nodes::Node as nodes::NodeTrait>::store_value(key, val, &mut test_node);
+	if res { println!("Successful storage of key-value pair!"); }
+
+    /*TODO 3. Update k buckets*/
+	 
+
+    /*TODO What else needs to be tested?*/
     println!("End of the main function!");
 }
 
