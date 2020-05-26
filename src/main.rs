@@ -3,7 +3,7 @@ extern crate rand;
 extern crate queue;
 
 pub mod nodes;
-pub mod kademlia;
+//pub mod kademlia;
 //mod routing;
 
 fn main () -> () {
