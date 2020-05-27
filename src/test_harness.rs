@@ -35,6 +35,8 @@ impl Network {
 		// TODO add key value pair to node with passed ip
 	}
 
+	// Sends rpc to node with passed ip
+	// TODO convert rpc from String to actual RPC struct
 	pub fn send_rpc(&self, ip: String, msg: String) {
 		match self.nodes_map.get(&ip) {
 			Some(node) => {
@@ -45,6 +47,8 @@ impl Network {
 	}
 }
 
+
+// Sends all "router" threads kill messages and waits for them to exit
 impl Drop for Network {
 	fn drop(&mut self) {
 		for (ip,node) in &mut self.nodes_map {
@@ -58,25 +62,25 @@ impl Drop for Network {
 }
 
 
-// Representation of router within simulated network
-
+// NetworkNode is essentially a wrapper around nodes::Node, only it additionally
+// has a multiple producer single consumer (mpsc) queue to simulate receiving 
+// RPCs from the "network"
 #[allow(dead_code)]
 pub struct NetworkNode {
-	ip: String,
+	ip: String,									
 	port: u64,
-	tx: Sender<String>,
-	kad_node: Box<nodes::Node>,
-	thread: Option<thread::JoinHandle<()>>,
+	tx: Sender<String>,  // Used by network and other threads to send to this node.
+	kad_node: Box<nodes::Node>,		
+	thread: Option<thread::JoinHandle<()>>, 
 }
 
 
 impl NetworkNode {
 	fn new(ip: String, port: u64) -> NetworkNode {
-		let (tx, rx) = channel();
 
+		let (tx, rx) = channel();
 		let thread = start_thread(ip.clone(), rx);
 
-		// Creates struct
 		NetworkNode {
 			ip: ip.clone(),
 			port,
@@ -88,14 +92,15 @@ impl NetworkNode {
 }
 
 
-// Starts router thread that recieves messages over the "network" from its input
-// channel and should handle them appropriately
+// Starts "router" thread so that it handles RPCs from its input queue
+// Returns thread join handle for use by main thread
 fn start_thread(ip: String, rx: Receiver<String>) -> thread::JoinHandle<()> {
 	let builder = thread::Builder::new().name(ip);
 
+	// Thread continuously waits on its RPC queue until it receives kill msg
 	builder.spawn(move || {
 		loop {
-			let rpc = rx.recv().expect("Thread receive failed");
+			let rpc = rx.recv().expect("Error in receiving RPC");
 			println!("recieved: {:?}", rpc);
 			handle();
 			if rpc == "kill" {
