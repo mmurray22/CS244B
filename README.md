@@ -1,6 +1,8 @@
 # CS244B
 CS 244B project
 
+![](https://github.com/mmurray22/CS244B/workflows/Rust/badge.svg?event=push)
+
 Current Objective: Recreate Kademlia DHT
 
 Kademlia Parameters that still need to be defined:

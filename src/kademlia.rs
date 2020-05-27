@@ -9,6 +9,15 @@
 //!TODO Questions which need to be answered: Are we little or big endian?
 #[path = "./nodes.rs"] mod nodes;
 
+const ALPHA : u64 = 3;
+
+pub enum Request {
+    Ping(Node),
+    Store(u64. u64),
+    Find_Node(ID),
+    Find_Value(u64)
+}
+
 pub fn ping (node1: nodes::Node) /*-> nodes::Node*/ {
     /*Find Node spot in the dependency tree & check if it's there*/
 }
