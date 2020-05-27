@@ -2,9 +2,10 @@ extern crate crypto;
 extern crate rand;
 extern crate queue;
 
+pub mod routing;
 pub mod nodes;
 //pub mod kademlia;
-//mod routing;
+pub mod rpc_test_harness;
 
 fn main () -> () {
     println!("Start of the main function!");
@@ -34,6 +35,7 @@ fn main () -> () {
 	 
 
     /*TODO What else needs to be tested?*/
+    rpc_test_harness::test_two_nodes_one_client();    
     println!("End of the main function!");
 }
 

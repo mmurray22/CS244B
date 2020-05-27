@@ -53,6 +53,7 @@ impl IDTrait for ID {
        for i in 0..BIT_SLICES {
             temp_id[i] = id1.0[i]^id2.0[i];
        }
+       /*What is the closeness factor?*/
        ID(temp_id)
     }
 

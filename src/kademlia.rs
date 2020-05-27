@@ -12,10 +12,15 @@
 const ALPHA : u64 = 3;
 
 pub enum Request {
-    Ping(Node),
+    Ping(nodes::Node),
     Store(u64. u64),
-    Find_Node(ID),
+    Find_Node(nodes::ID),
     Find_Value(u64)
+}
+
+pub enum Response {
+    Successful(bool),
+    TargetNode(nodes::Node)
 }
 
 pub fn ping (node1: nodes::Node) /*-> nodes::Node*/ {
