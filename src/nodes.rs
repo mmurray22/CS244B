@@ -4,10 +4,16 @@ use crypto::sha1::Sha1;
 use queue::*;
 use std::collections::HashMap;
 
+#[allow(unused_imports)]
+use std::ops::{Index,IndexMut};
+
 const BUCKET_SIZE: usize = 20; //Maximum length of kbuckets
 const BIT_SLICES: usize = 20; //8*20 = 160 bits
-//const DISTANCE_POINTS: usize = 160; //160 distance points
 
+#[allow(dead_code)]
+const DISTANCE_POINTS: usize = 160; //160 distance points
+
+#[allow(dead_code)]
 struct Pair {
     key: u64,
     value: u64
