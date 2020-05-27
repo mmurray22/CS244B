@@ -14,9 +14,9 @@ pub mod rpc_test_harness;
 fn main () -> () {
     let args: Vec<String> = env::args().collect();
 
-    if args[1] == "test" {
+    //if args[1] == "test" {
         run_test_harness();
-    } else {
+    /*} else {
         println!("Start of the main function!");
         /*TODO: 1. Make Node with an ID*/
         let ip = String::from("0.0.0.0");
@@ -45,7 +45,7 @@ fn main () -> () {
 
         /*TODO What else needs to be tested?*/
         println!("End of the main function!");
-    }
+    }*/
 }
 
 

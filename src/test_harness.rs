@@ -67,8 +67,6 @@ impl Drop for Network {
 // RPCs from the "network"
 #[allow(dead_code)]
 pub struct NetworkNode {
-	ip: String,									
-	port: u64,
 	tx: Sender<String>,  // Used by network and other threads to send to this node.
 	kad_node: Box<nodes::Node>,		
 	thread: Option<thread::JoinHandle<()>>, 
@@ -82,8 +80,6 @@ impl NetworkNode {
 		let thread = start_thread(ip.clone(), rx);
 
 		NetworkNode {
-			ip: ip.clone(),
-			port,
 			tx,
 			kad_node: <nodes::Node as nodes::NodeTrait>::new(ip.clone(), port),
 			thread: Some(thread),
@@ -101,7 +97,7 @@ fn start_thread(ip: String, rx: Receiver<String>) -> thread::JoinHandle<()> {
 	builder.spawn(move || {
 		loop {
 			let rpc = rx.recv().expect("Error in receiving RPC");
-			println!("recieved: {:?}", rpc);
+			println!("received: {:?}", rpc);
 			handle();
 			if rpc == "kill" {
 				break;
