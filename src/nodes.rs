@@ -4,9 +4,6 @@ use crypto::sha1::Sha1;
 use queue::*;
 use std::collections::HashMap;
 
-#[allow(unused_imports)]
-use std::ops::{Index,IndexMut};
-
 const BUCKET_SIZE: usize = 20; //Maximum length of kbuckets
 const BIT_SLICES: usize = 20; //8*20 = 160 bits
 
@@ -40,7 +37,7 @@ pub struct NodeZip {
 trait IDTrait {
     fn get_id(self) -> ID; /**/
     fn get_key_hash(key: u64, res: &mut [u8]); /*Sha1 Hashes key*/
-    fn xor(id1: ID, id2: ID) -> ID;
+    fn xor(id1: ID, id2: ID) -> u64;
     fn get_random_node_id () -> ID;
 }
 
@@ -54,13 +51,17 @@ impl IDTrait for ID {
         hasher.result(res);
     }
 
-    fn xor(id1: ID, id2: ID) -> ID {
+    fn xor(id1: ID, id2: ID) -> u64 {
        let mut temp_id = [0; BIT_SLICES];
+       let mut length_of_prefix : u64 = 0;
        for i in 0..BIT_SLICES {
             temp_id[i] = id1.0[i]^id2.0[i];
+            if temp_id[i] == 0 {
+                length_of_prefix+=1;
+            }
        }
        /*What is the closeness factor?*/
-       ID(temp_id)
+       length_of_prefix
     }
 
     fn get_random_node_id() -> ID {
@@ -75,7 +76,7 @@ pub trait NodeTrait {
     fn get_ip(node: &Box<Node>) -> String;
     fn get_port(node: &Box<Node>) -> u64;
     fn get_id(node: &Box<Node>) -> [u8; BIT_SLICES];
-    fn key_distance (node_id1: [u8; 20], node_id2: [u8; 20]) -> ID;
+    fn key_distance (node_id1: [u8; 20], node_id2: [u8; 20]) -> u64;
     fn update_node_state (self, args: u64, _ip: String, _port: u64, _value: u64) -> bool;
     fn update_k_bucket (primary_node: &mut Box<Node>, additional_node: &Box<Node>, i: u64) -> bool;
     fn store_value (key: u64, value: u64, node: &mut Box<Node>) -> bool;
@@ -105,7 +106,7 @@ impl NodeTrait for Node {
         (node).id.0
     }
 
-    fn key_distance (node_id1: [u8; 20], node_id2: [u8; 20]) -> ID {
+    fn key_distance (node_id1: [u8; 20], node_id2: [u8; 20]) -> u64 {
         ID::xor(ID(node_id1), ID(node_id2))
     }
 

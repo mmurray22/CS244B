@@ -13,7 +13,7 @@ const ALPHA : u64 = 3;
 
 pub enum Request {
     Ping(nodes::Node),
-    Store(u64. u64),
+    Store(u64, u64),
     Find_Node(nodes::ID),
     Find_Value(u64)
 }
