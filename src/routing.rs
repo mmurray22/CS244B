@@ -8,7 +8,9 @@ pub fn new(id: nodes::ID) -> nodes::ID {
 }
 
 pub fn add_node_entry() {
+
 }
 
 pub fn delete_node_entry() {
+
 }
