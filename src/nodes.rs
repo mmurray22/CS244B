@@ -1,9 +1,11 @@
 #[allow(non_snake_case)]
 use crypto::digest::Digest;
 use crypto::sha1::Sha1;
-use queue::*;
+//use queue::*;
 use std::collections::LinkedList;
 use std::collections::HashMap;
+use futures::{Stream};
+use futures::future::Future;
 
 const BUCKET_SIZE: usize = 20; //Maximum length of kbuckets
 const BIT_SLICES: usize = 20; //8*20 = 160 bits
@@ -138,3 +140,46 @@ impl NodeTrait for Node {
         true
     }
 }
+
+pub fn add_node_entry(main_node: &mut std::boxed::Box<Node>, zip_node: NodeZip, i: u64) -> bool {
+    //1. Check if there is room to add a ZipNode || if oldest of 20 nodes is dead
+    let mut ret = false;
+    if main_node.kbuckets[&i].len() < BUCKET_SIZE {
+        if !main_node.kbuckets[&i].back().is_none() ||
+           check_node(main_node.kbuckets[&i].back().unwrap().clone()) == false {
+            return ret;
+        }
+        ret = true;
+        if main_node.kbuckets.contains_key(&i) {
+            if let Some(x)  = main_node.kbuckets.get_mut(&i) {
+                x.push_back(zip_node);
+            }
+        } else {
+            let mut q = LinkedList::new();
+            q.push_back(zip_node);
+            main_node.kbuckets.entry(i).or_insert(q);
+        }
+    }
+    ret
+}
+
+pub fn check_node(zip_node: NodeZip) -> bool {
+    let addr = zip_node.ip;
+
+    //Pings the node in question to check if it is alive
+    let pinger = tokio_ping::Pinger::new();
+    /*let stream = pinger.and_then(move |pinger| Ok(pinger.chain(addr).stream()));
+    let future = stream.and_then(|stream| {
+        stream.take(3).for_each(|mb_time| {
+            let pinged = true;
+            match mb_time {
+                Some(time) => !pinged,
+                None => !pinged,
+            };
+            pinged
+        })
+    });*/
+
+    false
+}
+

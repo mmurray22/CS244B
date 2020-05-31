@@ -19,8 +19,8 @@ const TIMEOUT:u32 = 100; //TIMEOUT
 pub enum RPCType {
     PING,
     STORE,
-    FIND_NODE,
-    FIND_VALUE,
+    FindNode,
+    FindValue,
 }
 
 // pub enum SocketAddr {
