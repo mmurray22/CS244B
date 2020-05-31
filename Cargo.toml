@@ -7,6 +7,8 @@ authors = ["Michaela Murray", "Isaac Westlund", "Guy Wuollet Jr"]
 rust-crypto = "^0.2"
 rand = "^0.5"
 queue = "0.3.1"
+tokio = "0.2.21"
+futures = "0.3.5"
 
 [lib]
 name = "service"

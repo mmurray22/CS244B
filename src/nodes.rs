@@ -2,6 +2,7 @@
 use crypto::digest::Digest;
 use crypto::sha1::Sha1;
 use queue::*;
+use std::collections::LinkedList;
 use std::collections::HashMap;
 
 const BUCKET_SIZE: usize = 20; //Maximum length of kbuckets
@@ -24,7 +25,7 @@ pub struct Node {
     ip: String,
     port: u64,
     storage: Vec<Pair>,
-    kbuckets: HashMap<u64, Queue<NodeZip>>,
+    kbuckets: HashMap<u64, LinkedList<NodeZip>>,
 }
 
 #[derive(Clone)]
@@ -128,16 +129,7 @@ impl NodeTrait for Node {
                                   ip: additional_node.ip.clone(), 
                                   port: additional_node.port,
                         };
-        if primary_node.kbuckets.contains_key(&i) {
-            if let Some(x)  = primary_node.kbuckets.get_mut(&i) { 
-                x.queue(small_node).unwrap();
-            }
-        } else {
-            let mut q = Queue::with_capacity(BUCKET_SIZE);
-            q.queue(small_node).unwrap();
-            primary_node.kbuckets.entry(i).or_insert(q);
-        }
-        true
+        add_node_entry(primary_node, small_node, i)
     }
 
     fn store_value (key: u64, val: u64, node: &mut Box<Node>) -> bool {
