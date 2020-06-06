@@ -3,7 +3,8 @@
 use std::collections::HashMap;
 use std::thread;
 use std::sync::mpsc::*;
-use nodes;
+
+#[path = "./nodes.rs"] mod nodes;
 // use rpc;
 
 /* Test harness to test rpc communication between multiple threads */

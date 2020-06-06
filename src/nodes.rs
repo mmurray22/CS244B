@@ -1,17 +1,21 @@
-#[allow(non_snake_case)]
+//#[allow(non_snake_case)]
+#![feature(linked_list_remove)]
+use std::collections::LinkedList;
+
 use crypto::digest::Digest;
 use crypto::sha1::Sha1;
-use queue::*;
-use std::collections::HashMap;
-
-#[allow(unused_imports)]
-use std::ops::{Index,IndexMut};
+//use std::collections::LinkedList;
+use futures::{Stream};
+use futures::future::Future;
+use std::collections::BTreeMap;
 
 const BUCKET_SIZE: usize = 20; //Maximum length of kbuckets
 const BIT_SLICES: usize = 20; //8*20 = 160 bits
 
 #[allow(dead_code)]
 const DISTANCE_POINTS: usize = 160; //160 distance points
+
+//const DEFAULT_NODES
 
 #[allow(dead_code)]
 struct Pair {
@@ -27,11 +31,11 @@ pub struct Node {
     ip: String,
     port: u64,
     storage: Vec<Pair>,
-    kbuckets: HashMap<u64, Queue<NodeZip>>,
+    kbuckets: Vec<LinkedList<ZipNode>>,
 }
 
 #[derive(Clone)]
-pub struct NodeZip {
+pub struct ZipNode {
     id: ID,
     ip: String,
     port: u64,
@@ -40,7 +44,7 @@ pub struct NodeZip {
 trait IDTrait {
     fn get_id(self) -> ID; /**/
     fn get_key_hash(key: u64, res: &mut [u8]); /*Sha1 Hashes key*/
-    fn xor(id1: ID, id2: ID) -> ID;
+    fn xor(id1: ID, id2: ID) -> u64;
     fn get_random_node_id () -> ID;
 }
 
@@ -54,13 +58,17 @@ impl IDTrait for ID {
         hasher.result(res);
     }
 
-    fn xor(id1: ID, id2: ID) -> ID {
+    fn xor(id1: ID, id2: ID) -> u64 {
        let mut temp_id = [0; BIT_SLICES];
+       let mut length_of_prefix : u64 = 0;
        for i in 0..BIT_SLICES {
             temp_id[i] = id1.0[i]^id2.0[i];
+            if temp_id[i] == 0 {
+                length_of_prefix+=1;
+            }
        }
        /*What is the closeness factor?*/
-       ID(temp_id)
+       length_of_prefix
     }
 
     fn get_random_node_id() -> ID {
@@ -75,9 +83,9 @@ pub trait NodeTrait {
     fn get_ip(node: &Box<Node>) -> String;
     fn get_port(node: &Box<Node>) -> u64;
     fn get_id(node: &Box<Node>) -> [u8; BIT_SLICES];
-    fn key_distance (node_id1: [u8; 20], node_id2: [u8; 20]) -> ID;
+    fn key_distance (node_id1: [u8; 20], node_id2: [u8; 20]) -> u64;
     fn update_node_state (self, args: u64, _ip: String, _port: u64, _value: u64) -> bool;
-    fn update_k_bucket (primary_node: &mut Box<Node>, additional_node: &Box<Node>, i: u64) -> bool;
+    fn update_k_bucket (primary_node: &mut Box<Node>, additional_node: &Box<Node>, i: usize) -> bool;
     fn store_value (key: u64, value: u64, node: &mut Box<Node>) -> bool;
 }
 
@@ -88,7 +96,7 @@ impl NodeTrait for Node {
                                  ip: ip,
                                  port: port,
                                  storage: Vec::new(),
-                                 kbuckets: HashMap::new(),
+                                 kbuckets: Vec::with_capacity(DISTANCE_POINTS),
                             });
         node
     }
@@ -105,7 +113,7 @@ impl NodeTrait for Node {
         (node).id.0
     }
 
-    fn key_distance (node_id1: [u8; 20], node_id2: [u8; 20]) -> ID {
+    fn key_distance (node_id1: [u8; 20], node_id2: [u8; 20]) -> u64 {
         ID::xor(ID(node_id1), ID(node_id2))
     }
 
@@ -121,22 +129,13 @@ impl NodeTrait for Node {
         true
     }
 
-    fn update_k_bucket (primary_node: &mut Box<Node>, additional_node: &Box<Node>, i: u64) -> bool {
-        let small_node = NodeZip{
+    fn update_k_bucket (primary_node: &mut Box<Node>, additional_node: &Box<Node>, i: usize) -> bool {
+        let small_node = ZipNode{
                                   id: additional_node.id, 
                                   ip: additional_node.ip.clone(), 
                                   port: additional_node.port,
                         };
-        if primary_node.kbuckets.contains_key(&i) {
-            if let Some(x)  = primary_node.kbuckets.get_mut(&i) { 
-                x.queue(small_node).unwrap();
-            }
-        } else {
-            let mut q = Queue::with_capacity(BUCKET_SIZE);
-            q.queue(small_node).unwrap();
-            primary_node.kbuckets.entry(i).or_insert(q);
-        }
-        true
+        ZipNode::add_entry(primary_node, small_node, i)
     }
 
     fn store_value (key: u64, val: u64, node: &mut Box<Node>) -> bool {
@@ -145,3 +144,65 @@ impl NodeTrait for Node {
         true
     }
 }
+
+pub trait RoutingTable {
+    fn check_zipnode(main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode, i: usize /*ID distance*/) -> bool;
+    fn add_entry(main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode, i: usize /*ID distance*/) -> bool;
+    fn remove_entry(main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode, i: usize) -> bool;
+}
+
+impl PartialEq for ZipNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.id.0 == other.id.0
+    }
+}
+
+impl RoutingTable for ZipNode {
+    fn check_zipnode (main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode, i: usize) -> bool {
+        //1. Check if there is room to add a ZipNode
+        if main_node.kbuckets[i].len() == BUCKET_SIZE {
+            /*Just check if oldest of 20 nodes is dead*/
+            if /*TODO check_node(main_node.kbuckets[i].back().unwrap().clone())*/ true {
+                return false;
+            }
+        }
+        //2. Check if the ZipNode is already in a kbucket 
+        for element in main_node.kbuckets[i].iter_mut() {
+            if *element == zip_node {
+                return false;
+            }
+        }
+        //maybe add the distance index to the ZipNode struct?
+        true
+    }
+
+    fn add_entry(main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode, i: usize /*ID distance*/) -> bool {
+        //1. If the above checks all fail, then you can add the ZipNode to the kbucket!
+        if !Self::check_zipnode(main_node, zip_node.clone(), i) {
+            return true;
+        }
+        if main_node.kbuckets.len() >= i+1 {
+            if let Some(x)  = main_node.kbuckets.get_mut(i) {
+                x.push_back(zip_node);
+            }
+        } else {
+            let mut q = LinkedList::new();
+            q.push_back(zip_node);
+            main_node.kbuckets[i] = q;
+        }
+        false
+    }
+
+    fn remove_entry(main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode, i: usize) -> bool {
+        let mut counter = 0;
+        for element in main_node.kbuckets[i].iter_mut() {
+            if *element == zip_node {
+                //TODO: main_node.kbuckets[i].remove(counter);
+                break;
+            }
+            counter+=1;
+        }
+        true
+    }
+}
+

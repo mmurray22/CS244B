@@ -11,30 +11,81 @@
 
 const ALPHA : u64 = 3;
 
-pub enum Request {
+pub enum RequestType {
     Ping(nodes::Node),
-    Store(u64. u64),
+    Store(u64, u64),
     Find_Node(nodes::ID),
     Find_Value(u64)
 }
 
-pub enum Response {
+pub struct Request {
+    pub caller: nodes::Node,
+    pub callee_id: nodes::ID,
+    pub payload: RequestType,
+}
+
+pub enum ResponseType {
     Successful(bool),
-    TargetNode(nodes::Node)
+    TargetNode(nodes::Node),
 }
 
-pub fn ping (node1: nodes::Node) /*-> nodes::Node*/ {
-    /*Find Node spot in the dependency tree & check if it's there*/
+pub struct Response {
+    pub request: Request,
+    pub callee_id: nodes::ID,
+    pub payload: ResponseType,
 }
 
-pub fn store (key: u64, value: u64) /*-> nodes::Node*/ {
-    /*Inserts (key, value) into the DHT*/
+pub trait rpcfxns {
+    pub fn send_ping();
+    pub fn respond_ping();
+    pub fn send_store();
+    pub fn respond_store();
+    pub fn send_fnode();
+    pub fn respond_fnode();
+    pub fn send_fvalue();
+    pub fn respond_fvalue();
+    pub fn send_RPC(node_from: nodes::Node, node_to: nodes::Node);
 }
 
-pub fn find_node (node_id: nodes::ID) /*-> nodes::Node*/ {
-    /*Searches the tree and finds the corresponding Node to the node id*/
-}
+impl rpcfxns {
+    pub fn send_ping(node: nodes::Node) {
+        send_RPC();
+    }
 
-pub fn find_value (key: u64) /*-> nodes::Node*/ {
-    /*Search the tree and find the corresponding value to the key*/
-}   
+    pub fn respond_ping() -> bool {
+        true
+    }
+
+    pub fn send_store() {
+    }
+
+    pub fn respond_store() {
+    }
+
+    pub fn send_fnode() {
+    }
+
+    pub fn respond_fnode() {
+    }
+
+    pub fn send_fvalue() {
+    }
+
+    pub fn respond_fvalue() {
+    }
+
+    pub fn send_RPC(node_from: nodes::Node, node_to: nodes::Node) {
+        let serve_future = Server::bind(&addr)
+        // Serve requests using our `async serve_req` function.
+        // `serve` takes a type which implements the `MakeService` trait.
+        // `make_service_fn` converts a closure into a type which
+        // implements the `MakeService` trait. That closure must return a
+        // type that implements the `Service` trait, and `service_fn`
+        // converts a request-response function into a type that implements
+        // the `Service` trait.
+        .serve(make_service_fn(|_| async {
+            Ok::<_, hyper::Error>(service_fn(serve_req))
+        }));
+        socket.async();
+    }
+}
