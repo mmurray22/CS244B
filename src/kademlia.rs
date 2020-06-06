@@ -11,17 +11,17 @@
 
 const ALPHA : u64 = 3;
 
-pub enum RequestType {
+pub enum RPCType {
     Ping(nodes::Node),
     Store(u64, u64),
     Find_Node(nodes::ID),
     Find_Value(u64)
 }
 
-pub struct Request {
+pub struct RPCMessage {
     pub caller: nodes::Node,
     pub callee_id: nodes::ID,
-    pub payload: RequestType,
+    pub payload: RPCType,
 }
 
 pub enum ResponseType {
@@ -29,53 +29,47 @@ pub enum ResponseType {
     TargetNode(nodes::Node),
 }
 
-pub struct Response {
-    pub request: Request,
-    pub callee_id: nodes::ID,
-    pub payload: ResponseType,
-}
-
 pub trait rpcfxns {
-    pub fn send_ping();
-    pub fn respond_ping();
-    pub fn send_store();
-    pub fn respond_store();
-    pub fn send_fnode();
-    pub fn respond_fnode();
-    pub fn send_fvalue();
-    pub fn respond_fvalue();
-    pub fn send_RPC(node_from: nodes::Node, node_to: nodes::Node);
+    fn send_ping(node: nodes::Node);
+    fn respond_ping() -> bool;
+    fn send_store();
+    fn respond_store();
+    fn send_fnode();
+    fn respond_fnode();
+    fn send_fvalue();
+    fn respond_fvalue();
+    fn send_RPC(node_from: nodes::Node, node_to: nodes::Node);
 }
 
-impl rpcfxns {
-    pub fn send_ping(node: nodes::Node) {
-        send_RPC();
+impl rpcfxns for RPCMessage {
+    fn send_ping(node: nodes::Node) {
+        //send_RPC();
     }
 
-    pub fn respond_ping() -> bool {
+    fn respond_ping() -> bool {
         true
     }
 
-    pub fn send_store() {
+    fn send_store() {
     }
 
-    pub fn respond_store() {
+    fn respond_store() {
     }
 
-    pub fn send_fnode() {
+    fn send_fnode() {
     }
 
-    pub fn respond_fnode() {
+    fn respond_fnode() {
     }
 
-    pub fn send_fvalue() {
+    fn send_fvalue() {
     }
 
-    pub fn respond_fvalue() {
+    fn respond_fvalue() {
     }
 
-    pub fn send_RPC(node_from: nodes::Node, node_to: nodes::Node) {
-        let serve_future = Server::bind(&addr)
+    fn send_RPC(node_from: nodes::Node, node_to: nodes::Node) {
+        /*let serve_future = Server::bind(&addr)
         // Serve requests using our `async serve_req` function.
         // `serve` takes a type which implements the `MakeService` trait.
         // `make_service_fn` converts a closure into a type which
@@ -86,6 +80,6 @@ impl rpcfxns {
         .serve(make_service_fn(|_| async {
             Ok::<_, hyper::Error>(service_fn(serve_req))
         }));
-        socket.async();
+        socket.async();*/
     }
 }

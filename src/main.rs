@@ -14,7 +14,7 @@ pub mod nodes;
 pub mod routing;
 pub mod test_harness;
 pub mod rpc;
-//pub mod kademlia;
+pub mod kademlia;
 //pub mod rpc_test_harness;
 
 fn main () -> () {
