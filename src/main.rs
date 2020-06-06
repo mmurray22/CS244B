@@ -1,3 +1,5 @@
+//TODO #![feature(linked_list_remove)]
+
 extern crate crypto;
 extern crate rand;
 extern crate queue;
@@ -6,6 +8,7 @@ extern crate futures;
 extern crate tokio_ping;
 
 use std::env;
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
 pub mod nodes;
 pub mod routing;
@@ -16,9 +19,10 @@ pub mod rpc;
 
 fn main () -> () {
     let args: Vec<String> = env::args().collect();
-
+    let addr = SocketAddr::from(([127, 0, 0, 1], 3000)); //TODO: How to get your current IP?
+    //run_server(addr).await;
     //if args[1] == "test" {
-        run_test_harness();
+    run_test_harness(/*&args[1], &args[2]*/);
     /*} else {
         println!("Start of the main function!");
         /*TODO: 1. Make Node with an ID*/
@@ -51,30 +55,39 @@ fn main () -> () {
     }*/
 }
 
+/*async fn serve_req(_req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
+    // Always return successfully with a response containing a body with
+    // a friendly greeting ;)
+    Ok(Response::new(Body::from("hello, world!")))
+}
 
-fn run_test_harness() {
+async fn run_server(addr: SocketAddr) {
+    println!("Listening on http://{}", addr);
+
+    // Create a server bound on the provided address
+    let serve_future = Server::bind(&addr)
+        // Serve requests using our `async serve_req` function.
+        // `serve` takes a type which implements the `MakeService` trait.
+        // `make_service_fn` converts a closure into a type which
+        // implements the `MakeService` trait. That closure must return a
+        // type that implements the `Service` trait, and `service_fn`
+        // converts a request-response function into a type that implements
+        // the `Service` trait.
+        .serve(make_service_fn(|_| async {
+            Ok::<_, hyper::Error>(service_fn(serve_req))
+        }));
+
+    // Wait for the server to complete serving or exit with an error.
+    // If an error occurred, print it to stderr.
+    if let Err(e) = serve_future.await {
+        eprintln!("server error: {}", e);
+    }
+}*/
+
+fn run_test_harness(/*num_nodes: u64, num_keys: u64*/) {
     let num_nodes = 10;
     let num_keys = 10;
 
     let network = test_harness::Network::new(num_nodes);
     network.send_rpc("0".to_string(), "Hello world!".to_string());
 }
-
-
-/*async fn main_test() -> io::Result<()> {
-    let (client_transport, server_transport) = tarpc::transport::channel::unbounded();
-    
-    let server = server::new(server::Config::default())
-        .incoming(stream::once(future::ready(server_transport)))
-        .respond_with(HelloServer.serve());
-
-    tokio::spawn(spawn);
-
-    let mut client = WorldClient::new(client::Config::default(), client_transport).spawn()?;
-
-    let hello = client.hello(context::current(), "Stim".to_string()).await?;
-
-    println!("{}", hello);
-
-    Ok(())
-}*/

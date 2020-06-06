@@ -17,8 +17,8 @@ const TIMEOUT:u32 = 100; //TIMEOUT
 
 // Types to be used in the RPC message 
 pub enum RPCType {
-    PING,
-    STORE,
+    Ping,
+    Store,
     FindNode,
     FindValue,
 }
@@ -38,6 +38,9 @@ pub struct RPC {
 
 }
 
+trait Handler {
+
+}
 // impl RPC {
 //     fn list_of_ipaddr (self) -> Vec {
 //         //returns a list of ip addrs

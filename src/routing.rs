@@ -4,7 +4,7 @@
 
 #[path = "./nodes.rs"] mod nodes;
 
-pub fn add_node_entry(main_node: nodes::Node, zip_node: nodes::NodeZip, i: u64) -> bool {
+pub fn add_node_entry(main_node: nodes::Node, zip_node: nodes::ZipNode, i: u64) -> bool {
     //1. Check if there is room to add a ZipNode || if oldest of 20 nodes is dead
     let ret = false;
     if (main_node.kbuckets[i].len() < nodes::BUCKET_SIZE ||
@@ -23,7 +23,7 @@ pub fn add_node_entry(main_node: nodes::Node, zip_node: nodes::NodeZip, i: u64) 
     ret
 }
 
-pub fn check_node(zip_node: nodes::NodeZip) -> bool {
+pub fn check_node(zip_node: nodes::ZipNode) -> bool {
     let addr = zip_node.ip;
 
     //Pings the node in question to check if it is alive

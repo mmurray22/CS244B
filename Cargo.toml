@@ -2,6 +2,7 @@
 name = "244b_project"
 version = "0.0.1"
 authors = ["Michaela Murray", "Isaac Westlund", "Guy Wuollet Jr"]
+edition = "2018"
 
 [dependencies]
 rust-crypto = "^0.2"
