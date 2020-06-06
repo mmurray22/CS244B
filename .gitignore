@@ -3,3 +3,6 @@ target/*
 
 # Ignore the Cargo.lock file.
 Cargo.lock
+
+#ignore aws key files
+aws/*.pem
