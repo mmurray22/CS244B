@@ -1,5 +1,6 @@
 import logging
 import asyncio
+import sys
 
 from kademlia.network import Server
 
