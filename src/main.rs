@@ -6,6 +6,9 @@ extern crate queue;
 extern crate tokio;
 extern crate futures;
 extern crate tokio_ping;
+extern crate serde; 
+extern crate serde_json;
+extern crate serde_derive;
 
 use std::env;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
