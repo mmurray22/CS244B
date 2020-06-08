@@ -223,7 +223,7 @@ impl RoutingTable for ZipNode {
         let mut counter = 0;
         for element in main_node.kbuckets[i].iter_mut() {
             if *element == zip_node {
-                main_node.kbuckets[i].remove(counter);
+                //main_node.kbuckets[i].remove(counter);
                 break;
             }
             counter+=1;
