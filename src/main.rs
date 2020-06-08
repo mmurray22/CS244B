@@ -12,6 +12,7 @@ extern crate serde_derive;
 
 use std::env;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::str::FromStr;
 
 pub mod nodes;
 pub mod routing;
@@ -20,72 +21,32 @@ pub mod rpc;
 pub mod kademlia;
 //pub mod rpc_test_harness;
 
+pub const DEFAULT_PORT: u64 = 444;
+
 fn main () -> () {
     let args: Vec<String> = env::args().collect();
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000)); //TODO: How to get your current IP?
-    //run_server(addr).await;
-    //if args[1] == "test" {
-    run_test_harness(/*&args[1], &args[2]*/);
-    /*} else {
-        println!("Start of the main function!");
-        /*TODO: 1. Make Node with an ID*/
-        let ip = String::from("0.0.0.0");
-        let mut test_node : Box<nodes::Node> =  <nodes::Node as nodes::NodeTrait>::new(ip, 0);
-        let ip_print : String = <nodes::Node as nodes::NodeTrait>::get_ip(&test_node);
-        let port_print : u64 = <nodes::Node as nodes::NodeTrait>::get_port(&test_node);
-        let id_print : [u8; 20] = <nodes::Node as nodes::NodeTrait>::get_id(&test_node); 
-        println!("The node has IP {}", ip_print);
-        println!("The node has port {}", port_print);
-        println!("The ID is: ");
-        for x in &(id_print) {
-            print!("{}", x);
-        }
-        println!("");
-
-        /*TODO 2. Store a value in the node*/
-        let key = 20;
-        let val = 20;
-        //NOTE: The below function should eventually never be used outside of kademlia.rs; below is
-        //just a test
-        let res : bool = <nodes::Node as nodes::NodeTrait>::store_value(key, val, &mut test_node);
-        if res { println!("Successful storage of key-value pair!"); }
-
-        /*TODO 3. Update k buckets*/
-
-
-        /*TODO What else needs to be tested?*/
-        println!("End of the main function!");
-    }*/
-}
-
-/*async fn serve_req(_req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
-    // Always return successfully with a response containing a body with
-    // a friendly greeting ;)
-    Ok(Response::new(Body::from("hello, world!")))
-}
-
-async fn run_server(addr: SocketAddr) {
-    println!("Listening on http://{}", addr);
-
-    // Create a server bound on the provided address
-    let serve_future = Server::bind(&addr)
-        // Serve requests using our `async serve_req` function.
-        // `serve` takes a type which implements the `MakeService` trait.
-        // `make_service_fn` converts a closure into a type which
-        // implements the `MakeService` trait. That closure must return a
-        // type that implements the `Service` trait, and `service_fn`
-        // converts a request-response function into a type that implements
-        // the `Service` trait.
-        .serve(make_service_fn(|_| async {
-            Ok::<_, hyper::Error>(service_fn(serve_req))
-        }));
-
-    // Wait for the server to complete serving or exit with an error.
-    // If an error occurred, print it to stderr.
-    if let Err(e) = serve_future.await {
-        eprintln!("server error: {}", e);
+    if args.len() < 3 {
+        println!("Wrong number of params. Try again!");
     }
-}*/
+    let mut test_node : Box<nodes::Node> =  <nodes::Node as nodes::NodeTrait>::new(args[1].clone(), DEFAULT_PORT);
+    let base_id : nodes::ID = <nodes::ID>::from_str(&args[3].clone()).unwrap();
+    bootstrap(test_node, args[2].clone(), base_id.clone());
+    loop {
+        run_test_harness();
+        break; //TODO: Eventually remove! 
+    }
+}
+
+
+fn bootstrap(mut pre_node: Box<nodes::Node>, base_ip: String, base_id: nodes::ID) {
+    let default_zip = <nodes::ZipNode as nodes::RoutingTable>::new(base_id, base_ip, DEFAULT_PORT);
+    let pre_node_id : [u8; 20] =  <nodes::Node as nodes::NodeTrait>::get_id(&pre_node); 
+    let dist = <nodes::Node as nodes::NodeTrait>::key_distance(base_id, nodes::ID{id: pre_node_id});
+    <nodes::ZipNode as nodes::RoutingTable>::add_entry(&mut pre_node, default_zip, dist);
+
+    //Invoke Self Find_Node RPC
+    //find_node();
+}
 
 fn run_test_harness(/*num_nodes: u64, num_keys: u64*/) {
     let num_nodes = 10;
