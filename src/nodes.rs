@@ -5,9 +5,6 @@ use std::collections::LinkedList;
 use crypto::digest::Digest;
 use crypto::sha1::Sha1;
 //use std::collections::LinkedList;
-use futures::{Stream};
-use futures::future::Future;
-use std::collections::BTreeMap;
 
 const BUCKET_SIZE: usize = 20; //Maximum length of kbuckets
 const BIT_SLICES: usize = 20; //8*20 = 160 bits
@@ -23,7 +20,7 @@ struct Pair {
     value: u64
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct ID{
     pub id: [u8; BIT_SLICES],
 }
@@ -38,9 +35,9 @@ pub struct Node {
 
 #[derive(Clone)]
 pub struct ZipNode {
-    id: ID,
-    ip: String,
-    port: u64,
+    pub id: ID,
+    pub ip: String,
+    pub port: u64,
 }
 
 trait IDTrait {

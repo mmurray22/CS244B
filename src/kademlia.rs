@@ -7,57 +7,50 @@
 //! built on top of this, but that is for later)
 
 //!TODO Questions which need to be answered: Are we little or big endian?
-use serde::{Serialize, Deserialize};
-use serde_derive::{Serialize, Deserialize};
-#[path = "./nodes.rs"] mod nodes;
+// use serde::{Serialize, Deserialize};
+// use serde_derive::{Serialize, Deserialize};
+#[path = "./nodes.rs"] pub mod nodes;
 
 const ALPHA : u64 = 3;
 
 pub enum RPCType {
     Ping(nodes::Node),
-    Ping_Reply(bool),
+    PingReply(bool),
     Store(u64, u64),
-    Store_Reply(bool),
-    Find_Node(nodes::ID),
-    Find_Value(nodes::ID),
-    Find_Reply(nodes::ZipNode),
+    StoreReply(bool),
+    FindNode(nodes::ID),
+    FindValue(nodes::ID),
+    FindReply(nodes::ZipNode),
+    KillNode,
+    Debug,
 }
 
-//#[derive(Serialize, Deserialize, Debug)]
+// #[derive(Serialize, Deserialize, Debug)]
 pub struct RPCMessage {
-    pub caller: Box<nodes::Node>,
+    pub caller: nodes::ZipNode,
     pub callee_id: nodes::ID,
     pub payload: RPCType,
 }
 
-pub trait rpcfxns {
-    fn ping(probe_node: Box<nodes::Node>); 
-    fn store(key: u64, val: u64); 
-    fn find(id: nodes::ID, is_fnode: bool);
-    fn send_RPC(node_from: Box<nodes::Node>, node_to: Box<nodes::Node>, msg_type: u8);
-    fn read_RPC(ser_msg: String);
-}
-
-impl rpcfxns for RPCMessage {
-    fn ping(probe_node: Box<nodes::Node>) { 
+impl RPCMessage {
+    pub fn ping(&self, probe_node: nodes::ZipNode) { 
         //TODO
     }
     
-    fn store(key: u64, val: u64) { 
+    pub fn store(&self, key: u64, val: u64) { 
         //TODO
     }
     
-    fn find(id: nodes::ID, is_fnode: bool) {
+    pub fn find(&self, id: nodes::ID, is_fnode: bool) {
         //TODO
     }
 
-    fn send_RPC(node_from: Box<nodes::Node>, node_to: Box<nodes::Node>, msg_type: u8) {
+    pub fn send_rpc(&self, node_from: nodes::ZipNode, node_to: nodes::ID, msg_type: u8) {
         //TODO
-        let id_print : [u8; 20] =  <nodes::Node as nodes::NodeTrait>::get_id(&node_to);
         let msg = RPCMessage{
                     caller: node_from, 
-                    callee_id: nodes::ID{id: id_print}, 
-                    payload: RPCType::Ping_Reply(true)
+                    callee_id: node_to, //nodes::ID{id: id_print}, 
+                    payload: RPCType::PingReply(true)
                  };
         /*if msg_type == 1 { //Ping
             msg.payload = Ping(nodes_to);
@@ -90,7 +83,7 @@ impl rpcfxns for RPCMessage {
         socket.async();*/
     }
     
-    fn read_RPC(ser_msg: String) {
+    pub fn read_rpc(&self, ser_msg: String) {
         //TODO
         //let deserialize: RPCMessage = serde_json::from_str(&ser_msg).unwrap();
     }

@@ -1,5 +1,4 @@
 //TODO #![feature(linked_list_remove)]
-
 extern crate crypto;
 extern crate rand;
 extern crate queue;
@@ -10,22 +9,19 @@ extern crate serde;
 extern crate serde_json;
 extern crate serde_derive;
 
-use std::env;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+// use std::net::{SocketAddr};
 
-pub mod nodes;
-pub mod routing;
-pub mod test_harness;
-pub mod rpc;
-pub mod kademlia;
-//pub mod rpc_test_harness;
+mod nodes;
+mod routing;
+mod test_harness;
+// pub mod rpc;
+mod kademlia;
 
 fn main () -> () {
-    let args: Vec<String> = env::args().collect();
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000)); //TODO: How to get your current IP?
+    // let addr = SocketAddr::from(([127, 0, 0, 1], 3000)); //TODO: How to get your current IP?
     //run_server(addr).await;
     //if args[1] == "test" {
-    run_test_harness(/*&args[1], &args[2]*/);
+    run_test_harness();
     /*} else {
         println!("Start of the main function!");
         /*TODO: 1. Make Node with an ID*/
@@ -87,10 +83,24 @@ async fn run_server(addr: SocketAddr) {
     }
 }*/
 
-fn run_test_harness(/*num_nodes: u64, num_keys: u64*/) {
+fn run_test_harness() {
     let num_nodes = 10;
-    let num_keys = 10;
+    // let num_keys = 10;
 
-    let network = test_harness::Network::new(num_nodes);
-    network.send_rpc("0".to_string(), "Hello world!".to_string());
+    let mut network = test_harness::Network::new();
+    for i in 0..num_nodes {
+        // port is always 0
+        network.client_add_node(i.to_string(),0);
+    }
+
+    let rpc = test_harness::kademlia::RPCMessage {
+        caller: test_harness::kademlia::nodes::ZipNode {
+            id: test_harness::kademlia::nodes::ID { id: [0; 20]},
+            ip: "Client".to_string(),
+            port: 0 },
+        callee_id: test_harness::kademlia::nodes::ID {id: [0; 20]},
+        payload: test_harness::kademlia::RPCType::Debug
+    };
+
+    network.send_rpc("0".to_string(), rpc);
 }

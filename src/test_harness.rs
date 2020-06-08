@@ -2,112 +2,130 @@
 
 use std::collections::HashMap;
 use std::thread;
-use std::sync::mpsc::*;
+use std::sync::{Arc, Mutex, mpsc::*};
 
-#[path = "./nodes.rs"] mod nodes;
+#[path = "./nodes.rs"] pub mod nodes;
+#[path = "./kademlia.rs"] pub mod kademlia;
 // use rpc;
 
 /* Test harness to test rpc communication between multiple threads */
 
 #[allow(dead_code)]
 pub struct Network {
-	nodes_map: HashMap<String, Box<NetworkNode>>,
-	num_nodes: i32,
+	nodes_map: Arc<Mutex<HashMap<String, Sender<kademlia::RPCMessage>>>>,
+	nodes_vec: Vec<Option<thread::JoinHandle<()>>>,
 }
 
 
 impl Network {
-	pub fn new(num_nodes: i32) -> Box<Network> {
-		let mut map = HashMap::new();
-
-		// Currently all ports are set to 0
-		for i in 0..num_nodes {
-			map.insert(i.to_string(), Box::new(NetworkNode::new(i.to_string(), 0)));
-		}
-
+	pub fn new() -> Box<Network> {
 		let network = Box::new(Network {
-			nodes_map: map,
-			num_nodes: num_nodes,
+			nodes_map: Arc::new(Mutex::new(HashMap::new())),
+			nodes_vec: Vec::new(),
 		});
 		network
 	}
 
-	pub fn add_kv(ip: String) {
-		// TODO add key value pair to node with passed ip
+	pub fn client_add_node(&mut self, ip: String, port: u64) {
+		let (tx, thread) = start_network_node(ip.clone(), port, self.nodes_map.clone());
+		self.nodes_vec.push(Some(thread));
+		self.nodes_map.lock().unwrap().insert(ip,tx);
 	}
 
 	// Sends rpc to node with passed ip
 	// TODO convert rpc from String to actual RPC struct
-	pub fn send_rpc(&self, ip: String, msg: String) {
-		match self.nodes_map.get(&ip) {
+	pub fn send_rpc(&mut self, ip: String, msg: kademlia::RPCMessage) {
+		match self.nodes_map.lock().unwrap().get(&ip) {
 			Some(node) => {
-				node.tx.send(msg).expect("Failed to send");
+				node.send(msg).expect("Failed to send");
 			},
 			None => println!("Can't find node with ip: {:?}", &ip)
 		}
+	}
+
+	pub fn client_remove_node(&mut self, ip: String) {
+		let kill = kademlia::RPCMessage {
+			caller: kademlia::nodes::ZipNode {
+				id: kademlia::nodes::ID { id: [0; 20]},
+				ip: "".to_string(),
+				port: 0 },
+			callee_id: kademlia::nodes::ID {id: [0; 20]},
+			payload: kademlia::RPCType::KillNode
+		};
+		self.send_rpc(ip,kill);
 	}
 }
 
 
 // Sends all "router" threads kill messages and waits for them to exit
 impl Drop for Network {
-	fn drop(&mut self) {
-		for (ip,node) in &mut self.nodes_map {
-			node.tx.send("kill".to_string()).expect("Failed to kill thread");
 
-			if let Some(thread) = node.thread.take() {
-				thread.join().unwrap();
+	fn drop(&mut self) {
+		for node in &mut self.nodes_map.lock().unwrap().values() {
+			let kill = kademlia::RPCMessage {
+				caller: kademlia::nodes::ZipNode {
+					id: kademlia::nodes::ID { id: [0; 20]},
+					ip: "".to_string(),
+					port: 0 },
+				callee_id: kademlia::nodes::ID {id: [0; 20]},
+				payload: kademlia::RPCType::KillNode
+			};
+
+			node.send(kill).expect("Failed to kill thread");
+		}
+
+		for thread in &mut self.nodes_vec {
+			if let Some(t) = thread.take(){
+				t.join().unwrap();
 			}
 		}
 	}
 }
 
 
-// NetworkNode is essentially a wrapper around nodes::Node, only it additionally
-// has a multiple producer single consumer (mpsc) queue to simulate receiving 
-// RPCs from the "network"
-#[allow(dead_code)]
-pub struct NetworkNode {
-	tx: Sender<String>,  // Used by network and other threads to send to this node.
-	kad_node: Box<nodes::Node>,		
-	thread: Option<thread::JoinHandle<()>>, 
-}
-
-
-impl NetworkNode {
-	fn new(ip: String, port: u64) -> NetworkNode {
-
-		let (tx, rx) = channel();
-		let thread = start_thread(ip.clone(), rx);
-
-		NetworkNode {
-			tx,
-			kad_node: <nodes::Node as nodes::NodeTrait>::new(ip.clone(), port),
-			thread: Some(thread),
-		}
-	}
-}
-
-
-// Starts "router" thread so that it handles RPCs from its input queue
-// Returns thread join handle for use by main thread
-fn start_thread(ip: String, rx: Receiver<String>) -> thread::JoinHandle<()> {
-	let builder = thread::Builder::new().name(ip);
+// Starts network node  thread so that it handles RPCs from its input queue
+// returns a tx for sending by other threads
+fn start_network_node(ip: String, port: u64, 
+	network: Arc<Mutex<HashMap<String,Sender<kademlia::RPCMessage>>>>) -> 
+		(Sender<kademlia::RPCMessage>, thread::JoinHandle<()>) {
+	
+	let (tx, rx) = channel::<kademlia::RPCMessage>();
 
 	// Thread continuously waits on its RPC queue until it receives kill msg
-	builder.spawn(move || {
+	let thread = thread::spawn(move || {
+		let me = Box::new(<nodes::Node as nodes::NodeTrait>::new(ip, port));
+		let net = network;
 		loop {
 			let rpc = rx.recv().expect("Error in receiving RPC");
-			println!("received: {:?}", rpc);
-			handle();
-			if rpc == "kill" {
-				break;
+			match rpc.payload {
+				kademlia::RPCType::KillNode => {
+					println!("received: KILL {:?}", <nodes::Node as nodes::NodeTrait>::get_ip(&me));
+					break;
+				},
+				_ => handle(&me,rpc,&net)
 			}
 		}
-	}).unwrap()
+	});
+
+	return (tx,thread);
 }
 
 
-fn handle() {
-	// handle RPC
+fn handle(node: &Box<nodes::Node>, rpc: kademlia::RPCMessage, 
+		network: &Arc<Mutex<HashMap<String,Sender<kademlia::RPCMessage>>>>) {
+	match rpc.payload {
+		kademlia::RPCType::Debug => debug(rpc, node),
+		_ => println!("Other recieved")
+	}
+	
 }
+
+fn debug(rpc: kademlia::RPCMessage, node: &Box<nodes::Node>) {
+	println!("Node {:?} recieved debug to {:?} from {:?}", 
+		<nodes::Node as nodes::NodeTrait>::get_id(node),
+		rpc.callee_id,
+		rpc.caller.ip);
+}
+
+
+
