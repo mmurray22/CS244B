@@ -1,4 +1,4 @@
-#![feature(linked_list_remove)]
+//#![feature(linked_list_remove)]
 
 extern crate crypto;
 extern crate rand;
