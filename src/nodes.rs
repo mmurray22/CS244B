@@ -24,7 +24,9 @@ struct Pair {
 }
 
 #[derive(Copy, Clone)]
-pub struct ID([u8; BIT_SLICES]);
+pub struct ID{
+    pub id: [u8; BIT_SLICES],
+}
 
 pub struct Node {
     id: ID,
@@ -50,7 +52,7 @@ trait IDTrait {
 
 impl IDTrait for ID {
     fn get_id(self) -> ID {
-        ID(self.0)  
+        ID{id: self.id}  
     }
     fn get_key_hash(key: u64, res: &mut [u8]) {
         let mut hasher = Sha1::new();
@@ -62,7 +64,7 @@ impl IDTrait for ID {
        let mut temp_id = [0; BIT_SLICES];
        let mut length_of_prefix : u64 = 0;
        for i in 0..BIT_SLICES {
-            temp_id[i] = id1.0[i]^id2.0[i];
+            temp_id[i] = id1.id[i]^id2.id[i];
             if temp_id[i] == 0 {
                 length_of_prefix+=1;
             }
@@ -73,7 +75,7 @@ impl IDTrait for ID {
 
     fn get_random_node_id() -> ID {
         let array: [u8; BIT_SLICES] = rand::random();
-        ID(array)
+        ID{id: array}
     }
 
 }
@@ -110,11 +112,11 @@ impl NodeTrait for Node {
     }
 
     fn get_id (node: &Box<Node>) -> [u8; BIT_SLICES] {
-        (node).id.0
+        (node).id.id
     }
 
     fn key_distance (node_id1: [u8; 20], node_id2: [u8; 20]) -> u64 {
-        ID::xor(ID(node_id1), ID(node_id2))
+        ID::xor(ID{id: node_id1}, ID{id: node_id2})
     }
 
     fn update_node_state(mut self, args: u64, _ip: String, _port: u64, _value: u64) -> bool {
@@ -153,7 +155,7 @@ pub trait RoutingTable {
 
 impl PartialEq for ZipNode {
     fn eq(&self, other: &Self) -> bool {
-        self.id.0 == other.id.0
+        self.id.id == other.id.id
     }
 }
 
