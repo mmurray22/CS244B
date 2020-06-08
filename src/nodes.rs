@@ -1,6 +1,7 @@
 //#[allow(non_snake_case)]
 #![feature(linked_list_remove)]
 use std::collections::LinkedList;
+use std::str::FromStr;
 
 use crypto::digest::Digest;
 use crypto::sha1::Sha1;
@@ -43,7 +44,7 @@ pub struct ZipNode {
 trait IDTrait {
     fn get_id(self) -> ID; /**/
     fn get_key_hash(key: u64, res: &mut [u8]); /*Sha1 Hashes key*/
-    fn xor(id1: ID, id2: ID) -> u64;
+    fn xor(id1: ID, id2: ID) -> usize;
     fn get_random_node_id () -> ID;
 }
 
@@ -57,9 +58,9 @@ impl IDTrait for ID {
         hasher.result(res);
     }
 
-    fn xor(id1: ID, id2: ID) -> u64 {
+    fn xor(id1: ID, id2: ID) -> usize {
        let mut temp_id = [0; BIT_SLICES];
-       let mut length_of_prefix : u64 = 0;
+       let mut length_of_prefix : usize = 0;
        for i in 0..BIT_SLICES {
             temp_id[i] = id1.id[i]^id2.id[i];
             if temp_id[i] == 0 {
@@ -74,7 +75,19 @@ impl IDTrait for ID {
         let array: [u8; BIT_SLICES] = rand::random();
         ID{id: array}
     }
+}
 
+impl FromStr for ID {
+    type Err = std::num::ParseIntError;
+    fn from_str(input_id: &str) -> Result<Self, Self::Err> {
+        let mut array: [u8; BIT_SLICES] = rand::random();
+        for mut i in 0..input_id.len() {
+            let converted: u8 = u8::from_str_radix(&input_id[i..i+3], 10)?;            
+            array[i/3] = converted;
+            i+=3;
+        }
+        Ok(ID {id: array})
+    }
 }
 
 pub trait NodeTrait {
@@ -82,7 +95,7 @@ pub trait NodeTrait {
     fn get_ip(node: &Box<Node>) -> String;
     fn get_port(node: &Box<Node>) -> u64;
     fn get_id(node: &Box<Node>) -> [u8; BIT_SLICES];
-    fn key_distance (node_id1: [u8; 20], node_id2: [u8; 20]) -> u64;
+    fn key_distance (node_id1: ID, node_id2: ID) -> usize;
     fn update_node_state (self, args: u64, _ip: String, _port: u64, _value: u64) -> bool;
     fn update_k_bucket (primary_node: &mut Box<Node>, additional_node: &Box<Node>, i: usize) -> bool;
     fn store_value (key: u64, value: u64, node: &mut Box<Node>) -> bool;
@@ -97,6 +110,7 @@ impl NodeTrait for Node {
                                  storage: Vec::new(),
                                  kbuckets: Vec::with_capacity(DISTANCE_POINTS),
                             });
+        //TODO: Populate kbuckets with default nodes!
         node
     }
 
@@ -112,8 +126,8 @@ impl NodeTrait for Node {
         (node).id.id
     }
 
-    fn key_distance (node_id1: [u8; 20], node_id2: [u8; 20]) -> u64 {
-        ID::xor(ID{id: node_id1}, ID{id: node_id2})
+    fn key_distance (node_id1: ID, node_id2: ID) -> usize {
+        ID::xor(node_id1, node_id2)
     }
 
     fn update_node_state(mut self, args: u64, _ip: String, _port: u64, _value: u64) -> bool {
@@ -148,6 +162,7 @@ pub trait RoutingTable {
     fn check_zipnode(main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode, i: usize /*ID distance*/) -> bool;
     fn add_entry(main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode, i: usize /*ID distance*/) -> bool;
     fn remove_entry(main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode, i: usize) -> bool;
+    fn new(base_id: ID, base_ip: String, base_port: u64) -> ZipNode;
 }
 
 impl PartialEq for ZipNode {
@@ -157,6 +172,15 @@ impl PartialEq for ZipNode {
 }
 
 impl RoutingTable for ZipNode {
+    fn new(base_id: ID, base_ip: String, base_port: u64) -> ZipNode {
+        let default_zip = ZipNode{
+            id: base_id,
+            ip: base_ip,
+            port: base_port,
+        };
+        default_zip
+    }
+    
     fn check_zipnode (main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode, i: usize) -> bool {
         //1. Check if there is room to add a ZipNode
         if main_node.kbuckets[i].len() == BUCKET_SIZE {
@@ -196,7 +220,7 @@ impl RoutingTable for ZipNode {
         let mut counter = 0;
         for element in main_node.kbuckets[i].iter_mut() {
             if *element == zip_node {
-                //TODO: main_node.kbuckets[i].remove(counter);
+                main_node.kbuckets[i].remove(counter);
                 break;
             }
             counter+=1;

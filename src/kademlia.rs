@@ -27,11 +27,13 @@ pub enum RPCType {
 
 // #[derive(Serialize, Deserialize, Debug)]
 pub struct RPCMessage {
+    //TODO: pub token: ,
     pub caller: nodes::ZipNode,
     pub callee_id: nodes::ID,
     pub payload: RPCType,
 }
 
+// <<<<<<< HEAD
 impl RPCMessage {
     pub fn ping(&self, probe_node: nodes::ZipNode) { 
         //TODO
@@ -43,15 +45,40 @@ impl RPCMessage {
     
     pub fn find(&self, id: nodes::ID, is_fnode: bool) {
         //TODO
+// =======
+// pub trait rpcfxns {
+//     fn ping(probe_node: Box<nodes::Node>); 
+//     fn store(key: u64, val: u64); 
+//     fn find(id: nodes::ID, is_fnode: bool);
+//     fn send_RPC(node_from: Box<nodes::Node>, node_to: Box<nodes::Node>, msg_type: u8);
+//     fn read_RPC(ser_msg: String);
+// }
+
+// impl rpcfxns for RPCMessage {
+//     fn ping(probe_node: Box<nodes::Node>) { 
+//         //TODO: probes a node to see if it is online
+//     }
+    
+//     fn store(key: u64, val: u64) { 
+//         //TODO: Instructs a node to store a <key, value> pair for later retrieval
+//     }
+    
+//     fn find(id: nodes::ID, is_fnode: bool) {
+//         //TODO: Find a node, and then either returns the node or the value associated with that
+//         //node
+// >>>>>>> de57393484fe5b0cdd97f1e25efcfb4adf007aeb
     }
 
     pub fn send_rpc(&self, node_from: nodes::ZipNode, node_to: nodes::ID, msg_type: u8) {
-        //TODO
-        let msg = RPCMessage{
-                    caller: node_from, 
-                    callee_id: node_to, //nodes::ID{id: id_print}, 
-                    payload: RPCType::PingReply(true)
-                 };
+        // let id_print : [u8; 20] =  <nodes::Node as nodes::NodeTrait>::get_id(&node_to);
+        // let smaller_node_from : nodes::ZipNode = <nodes::ZipNode as nodes::RoutingTable>::new(nodes::ID{id:<nodes::Node as nodes::NodeTrait>::get_id(&node_from)},
+        //                                                                <nodes::Node as nodes::NodeTrait>::get_ip(&node_from), 
+        //                                                                <nodes::Node as nodes::NodeTrait>::get_port(&node_from));
+        // let msg = RPCMessage{
+        //             caller: smaller_node_from, 
+        //             callee_id: nodes::ID{id: id_print}, 
+        //             payload: RPCType::Ping_Reply(true)
+        //          };
         /*if msg_type == 1 { //Ping
             msg.payload = Ping(nodes_to);
         } else if msg_type == 2 { //Store
@@ -66,21 +93,6 @@ impl RPCMessage {
             msg.payload = Find_Reply();
         } //No Ping_Reply cuz it's default
         let serialize = serde_json::to_string().unwrap();*/
-
-
-
-        /*let serve_future = Server::bind(&addr)
-        // Serve requests using our `async serve_req` function.
-        // `serve` takes a type which implements the `MakeService` trait.
-        // `make_service_fn` converts a closure into a type which
-        // implements the `MakeService` trait. That closure must return a
-        // type that implements the `Service` trait, and `service_fn`
-        // converts a request-response function into a type that implements
-        // the `Service` trait.
-        .serve(make_service_fn(|_| async {
-            Ok::<_, hyper::Error>(service_fn(serve_req))
-        }));
-        socket.async();*/
     }
     
     pub fn read_rpc(&self, ser_msg: String) {
