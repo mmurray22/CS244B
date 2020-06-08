@@ -1,5 +1,5 @@
 //#[allow(non_snake_case)]
-#![feature(linked_list_remove)]
+//#![feature(linked_list_remove)]
 use std::collections::LinkedList;
 use std::str::FromStr;
 
@@ -223,7 +223,7 @@ impl RoutingTable for ZipNode {
         let mut counter = 0;
         for element in main_node.kbuckets[i].iter_mut() {
             if *element == zip_node {
-                //TODO: main_node.kbuckets[i].remove(counter);
+                main_node.kbuckets[i].remove(counter);
                 break;
             }
             counter+=1;
