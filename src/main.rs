@@ -24,14 +24,12 @@ pub const DEFAULT_PORT: u64 = 444;
 fn main () -> () {
     let args: Vec<String> = env::args().collect();
     if args.len() < 3 {
-        println!("Wrong number of params. Try again!");
-    }
-    let mut test_node : Box<nodes::Node> =  <nodes::Node as nodes::NodeTrait>::new(args[1].clone(), DEFAULT_PORT);
-    let base_id : nodes::ID = <nodes::ID>::from_str(&args[3].clone()).unwrap();
-    bootstrap(test_node, args[2].clone(), base_id.clone());
-    loop {
+        println!("Running test harness");
         run_test_harness();
-        break; //TODO: Eventually remove! 
+    } else {
+        let mut test_node : Box<nodes::Node> =  <nodes::Node as nodes::NodeTrait>::new(args[1].clone(), DEFAULT_PORT);
+        let base_id : nodes::ID = <nodes::ID>::from_str(&args[3].clone()).unwrap();
+        bootstrap(test_node, args[2].clone(), base_id.clone());
     }
 }
 
