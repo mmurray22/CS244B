@@ -14,7 +14,7 @@
 const ALPHA : u64 = 3;
 
 pub enum RPCType {
-    Ping(nodes::Node),
+    Ping(nodes::ZipNode),
     PingReply(bool),
     Store(u64, u64),
     StoreReply(bool),
@@ -33,40 +33,31 @@ pub struct RPCMessage {
     pub payload: RPCType,
 }
 
-// <<<<<<< HEAD
-impl RPCMessage {
-    pub fn ping(&self, probe_node: nodes::ZipNode) { 
-        //TODO
-    }
-    
-    pub fn store(&self, key: u64, val: u64) { 
-        //TODO
-    }
-    
-    pub fn find(&self, id: nodes::ID, is_fnode: bool) {
-        //TODO
-// =======
-// pub trait rpcfxns {
-//     fn ping(probe_node: Box<nodes::Node>); 
-//     fn store(key: u64, val: u64); 
-//     fn find(id: nodes::ID, is_fnode: bool);
-//     fn send_RPC(node_from: Box<nodes::Node>, node_to: Box<nodes::Node>, msg_type: u8);
-//     fn read_RPC(ser_msg: String);
-// }
+// pub fn lookup(node: nodes::Node, sig: u32, target_id: nodes::ID) -> 
 
-// impl rpcfxns for RPCMessage {
-//     fn ping(probe_node: Box<nodes::Node>) { 
-//         //TODO: probes a node to see if it is online
-//     }
+impl RPCMessage {
+    pub fn ping(&self, probe_node: nodes::ZipNode, current: &Box<nodes::Node>) { 
+        //TODO
+    }
+
+    pub fn ping_reply(&self, success: bool, current: &Box<nodes::Node>) {
+        // TODO
+    }
     
-//     fn store(key: u64, val: u64) { 
-//         //TODO: Instructs a node to store a <key, value> pair for later retrieval
-//     }
+    pub fn store(&self, key: u64, val: u64, current: &Box<nodes::Node>) { 
+        //TODO
+    }
+
+    pub fn store_reply(&self, success: bool, current: &Box<nodes::Node>) {
+        //TODO
+    }
     
-//     fn find(id: nodes::ID, is_fnode: bool) {
-//         //TODO: Find a node, and then either returns the node or the value associated with that
-//         //node
-// >>>>>>> de57393484fe5b0cdd97f1e25efcfb4adf007aeb
+    pub fn find(&self, id: nodes::ID, is_fnode: bool, current: &Box<nodes::Node>) {
+        //TODO
+    }
+
+    pub fn find_reply(&self, reply: nodes::ZipNode, current: &Box<nodes::Node>) {
+        //TODO
     }
 
     pub fn send_rpc(&self, node_from: nodes::ZipNode, node_to: nodes::ID, msg_type: u8) {
