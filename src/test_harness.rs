@@ -3,6 +3,7 @@
 use std::collections::HashMap;
 use std::thread;
 use std::sync::{Arc, Mutex, mpsc::*};
+use rand::Rng;
 
 // #[path = "./nodes.rs"] pub mod nodes;
 #[path = "./kademlia.rs"] pub mod kademlia;
@@ -12,25 +13,52 @@ use std::sync::{Arc, Mutex, mpsc::*};
 
 #[allow(dead_code)]
 pub struct Network {
-	nodes_map: Arc<Mutex<HashMap<String, Sender<kademlia::RPCMessage>>>>,
-	nodes_vec: Vec<Option<thread::JoinHandle<()>>>,
+	net_map: Arc<Mutex<HashMap<String, Sender<kademlia::RPCMessage>>>>,
+	join_vec: Vec<Option<thread::JoinHandle<()>>>,
+	nodes_map: HashMap<String,kademlia::nodes::ZipNode>
 }
 
 
 impl Network {
 	pub fn new() -> Box<Network> {
 		let network = Box::new(Network {
-			nodes_map: Arc::new(Mutex::new(HashMap::new())),
-			nodes_vec: Vec::new(),
+			net_map: Arc::new(Mutex::new(HashMap::new())), 
+			join_vec: Vec::new(),			// Used to wait for all nodes to die 
+			nodes_map: HashMap::new(), 		// Used to add new nodes to the network
 		});
 		network
 	}
 
 	pub fn client_add_node(&mut self, ip: String, port: u64) {
-		let (tx, thread) = start_network_node(ip.clone(), port, self.nodes_map.clone());
-		self.nodes_vec.push(Some(thread));
-		self.nodes_map.lock().unwrap().insert(ip,tx);
 
+		let (key, zip ,tx, thread) = start_network_node(ip.clone(), port, self.net_map.clone());
+		self.join_vec.push(Some(thread));
+		self.net_map.lock().unwrap().insert(ip.clone(),tx.clone());
+
+		// Start lookup for self to add itself to the network
+		if self.nodes_map.len() > 0 {
+			let mut rng = rand::thread_rng();
+			let index = rng.gen_range(0, self.nodes_map.len());
+			let mut i = 0;
+				for ozip in self.nodes_map.values() {
+				if index == i {
+					let add = kademlia::RPCMessage {
+						rpc_token: kademlia::nodes::ID {id: [0; 20]},
+						lookup_key: 0,
+						caller_node: ozip.clone(),
+						callee_id: kademlia::nodes::ID {id: [0; 20]},
+						payload: kademlia::RPCType::ClientGet(key)
+					};
+
+					tx.send(add).expect("Failed to join network");
+					break;
+				}
+				i += 1;
+			}
+		}
+
+		// Add
+		self.nodes_map.insert(ip,zip);
 	}
 
 	pub fn client_remove_node(&mut self, ip: String) {
@@ -45,13 +73,14 @@ impl Network {
 			payload: kademlia::RPCType::KillNode
 		};
 		self.send_rpc(ip.clone(),kill);
-		self.nodes_map.lock().unwrap().remove(&ip);
+		self.net_map.lock().unwrap().remove(&ip);
+		self.nodes_map.remove(&ip);
 	}
 
 	// Sends rpc to node with passed ip
 	// TODO convert rpc from String to actual RPC struct
 	pub fn send_rpc(&mut self, ip: String, msg: kademlia::RPCMessage) {
-		match self.nodes_map.lock().unwrap().get(&ip) {
+		match self.net_map.lock().unwrap().get(&ip) {
 			Some(node) => {
 				node.send(msg).expect("Failed to send");
 			},
@@ -65,7 +94,7 @@ impl Network {
 impl Drop for Network {
 
 	fn drop(&mut self) {
-		for node in &mut self.nodes_map.lock().unwrap().values() {
+		for node in &mut self.net_map.lock().unwrap().values() {
 			let kill = kademlia::RPCMessage {
 				rpc_token: kademlia::nodes::ID {id: [0; 20]},
 				lookup_key: 0,
@@ -80,7 +109,7 @@ impl Drop for Network {
 			node.send(kill).expect("Failed to kill thread");
 		}
 
-		for thread in &mut self.nodes_vec {
+		for thread in &mut self.join_vec {
 			if let Some(t) = thread.take(){
 				t.join().unwrap();
 			}
@@ -93,18 +122,22 @@ impl Drop for Network {
 // returns a tx for sending by other threads
 fn start_network_node(ip: String, port: u64, 
 	network: Arc<Mutex<HashMap<String,Sender<kademlia::RPCMessage>>>>) -> 
-		(Sender<kademlia::RPCMessage>, thread::JoinHandle<()>) {
+		(u64, kademlia::nodes::ZipNode, Sender<kademlia::RPCMessage>, thread::JoinHandle<()>) {
 	
 	let (tx, rx) = channel::<kademlia::RPCMessage>();
+	let node = Box::new(kademlia::nodes::Node::new(ip, port));
+	let key = node.get_key();
+	let zip = kademlia::nodes::ZipNode::new(node.get_id(),node.get_ip(), node.get_port());
 
 	// Thread continuously waits on its RPC queue until it receives kill msg
 	let thread = thread::spawn(move || {
 
 		// Inits threads node, and routing table.
-		let mut me = Box::new(kademlia::nodes::Node::new(ip, port));
+		
 		let net = network;
 		let mut r_table = Box::new(HashMap::new());
-
+		let mut me = node;
+		
 		loop {
 			let rpc = rx.recv().expect("Error in receiving RPC");
 			match rpc.payload {
@@ -118,7 +151,7 @@ fn start_network_node(ip: String, port: u64,
 		}
 	});
 
-	return (tx,thread);
+	return (key,zip,tx,thread);
 }
 
 
