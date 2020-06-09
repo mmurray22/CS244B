@@ -44,6 +44,7 @@ impl Network {
 				if index == i {
 					let add = kademlia::RPCMessage {
 						rpc_token: kademlia::nodes::ID {id: [0; 20]},
+						lookup_key: 0,
 						caller_node: ozip.clone(),
 						callee_id: kademlia::nodes::ID {id: [0; 20]},
 						payload: kademlia::RPCType::ClientGet(key)
