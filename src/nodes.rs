@@ -213,5 +213,17 @@ impl ZipNode {
         }
         true
     }
-}
 
+    pub fn lookup_init(key: ID) -> Vec<ZipNode> /*ALPHA Nodes*/ {
+        let dummy = Vec::<ZipNode>::new();
+        dummy
+    }
+
+    pub fn lookup_update(key: ID, zip_node : ZipNode) -> Vec<ZipNode> {
+        let dummy = Vec::<ZipNode>::new();
+        dummy
+    }
+
+    pub fn lookup_end(key: ID) -> () {
+    }
+}

@@ -34,6 +34,7 @@ pub enum RPCType {
 pub struct RPCMessage {
     // Purpose of rpc token? It signs all the rpc messages
     pub rpc_token: nodes::ID,
+    pub lookup_key: usize,
     pub caller_node: nodes::ZipNode,
     pub callee_id: nodes::ID,
     pub payload: RPCType,
@@ -45,7 +46,7 @@ impl RPCMessage {
                         -> Vec<nodes::ZipNode>{
         let mut ret_vec = Vec::with_capacity(nodes::BUCKET_SIZE);
         let mut dist = nodes::Node::key_distance(target_id, self_id);
-        while true {
+        loop {
             if ret_vec.len() < ALPHA && dist != 0 {
                 dist-=1;
             } else {
@@ -97,6 +98,7 @@ impl RPCMessage {
 
         replys.push((self.caller_node.ip.clone(), RPCMessage {
             rpc_token: nodes::ID {id: [0; 20]},
+            lookup_key: 0,
             caller_node: nodes::ZipNode {
                 id: current.get_id(),
                 ip: current.get_ip(),
@@ -128,6 +130,7 @@ impl RPCMessage {
                 if current.store_value(key,val) {
                     replys.push((self.caller_node.ip.clone(), RPCMessage {
                         rpc_token: nodes::ID {id: [0; 20]},
+                        lookup_key: 0,
                         caller_node: nodes::ZipNode {
                             id: current.get_id(),
                             ip: current.get_ip(),

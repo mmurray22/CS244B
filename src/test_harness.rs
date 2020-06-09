@@ -36,7 +36,8 @@ impl Network {
 	pub fn client_remove_node(&mut self, ip: String) {
 		let kill = kademlia::RPCMessage {
 			rpc_token: kademlia::nodes::ID {id: [0; 20]},
-			caller_node: kademlia::nodes::ZipNode {
+			lookup_key: 0,
+            caller_node: kademlia::nodes::ZipNode {
 				id: kademlia::nodes::ID { id: [0; 20]},
 				ip: "".to_string(),
 				port: 0 },
@@ -67,7 +68,8 @@ impl Drop for Network {
 		for node in &mut self.nodes_map.lock().unwrap().values() {
 			let kill = kademlia::RPCMessage {
 				rpc_token: kademlia::nodes::ID {id: [0; 20]},
-				caller_node: kademlia::nodes::ZipNode {
+				lookup_key: 0,
+                caller_node: kademlia::nodes::ZipNode {
 					id: kademlia::nodes::ID { id: [0; 20]},
 					ip: "".to_string(),
 					port: 0 },
