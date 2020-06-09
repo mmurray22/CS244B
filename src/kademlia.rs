@@ -151,7 +151,7 @@ impl RPCMessage {
         return replys;
     }
     
-    fn find(&self, is_fnode: bool, current: &mut Box<nodes::Node>) 
+    pub fn find(&self, is_fnode: bool, current: &mut Box<nodes::Node>) 
             -> Vec<(String,RPCMessage)> {
 
         // TODO 

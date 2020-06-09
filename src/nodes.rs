@@ -1,5 +1,3 @@
-
-#![feature(linked_list_remove)]
 use std::collections::LinkedList;
 use std::str::FromStr;
 
@@ -14,7 +12,7 @@ const BIT_SLICES: usize = 20; //8*20 = 160 bits
 const DISTANCE_POINTS: usize = 160; //160 distance points
 
 pub const K: usize = 2;
-pub const sig: usize = 1;
+pub const SIG: usize = 1;
 
 //const DEFAULT_NODES
 
@@ -95,13 +93,14 @@ impl FromStr for ID {
 
 impl Node {
     pub fn new (ip: String, port: u64) -> Box<Node> {
-        let node = Box::new(Node{
+        let mut node = Box::new(Node{
             id: ID::get_random_node_id(),
             ip: ip,
             port: port,
             storage: Vec::new(),
             kbuckets: Vec::with_capacity(DISTANCE_POINTS),
         });
+        node.kbuckets = vec![LinkedList::new(); DISTANCE_POINTS];
         //TODO: Populate kbuckets with default nodes!
         node
     }
@@ -134,13 +133,13 @@ impl Node {
         true
     }
 
-    pub fn update_k_bucket (primary_node: &mut Box<Node>, additional_node: &Box<Node>, i: usize) -> bool {
+    pub fn update_k_bucket (primary_node: &mut Box<Node>, additional_node: &Box<Node>) -> bool {
         let small_node = ZipNode{
                                   id: additional_node.id, 
                                   ip: additional_node.ip.clone(), 
                                   port: additional_node.port,
                         };
-        ZipNode::add_entry(primary_node, small_node, i)
+        ZipNode::add_entry(primary_node, small_node)
     }
 
     pub fn store_value (&mut self, key: u64, val: u64) -> bool {
@@ -150,20 +149,12 @@ impl Node {
     }
 }
 
-pub trait RoutingTable {
-    fn check_zipnode(main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode, i: usize /*ID distance*/) -> bool;
-    fn add_entry(main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode, i: usize /*ID distance*/) -> bool;
-    fn remove_entry(main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode, i: usize) -> bool;
-    fn new(base_id: ID, base_ip: String, base_port: u64) -> ZipNode;
-}
-
 impl PartialEq for ZipNode {
     fn eq(&self, other: &Self) -> bool {
         self.id.id == other.id.id
     }
 }
 
-// impl RoutingTable for ZipNode {
 impl ZipNode {
     pub fn new(base_id: ID, base_ip: String, base_port: u64) -> ZipNode {
         let default_zip = ZipNode{
@@ -176,12 +167,15 @@ impl ZipNode {
     
     pub fn check_zipnode (main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode, i: usize) -> bool {
         //1. Check if there is room to add a ZipNode
+        println!("Here!");
         if main_node.kbuckets[i].len() == BUCKET_SIZE {
             /*Just check if oldest of 20 nodes is dead*/
+            println!("Thorough");
             if /*TODO check_node(main_node.kbuckets[i].back().unwrap().clone())*/ true {
                 return false;
             }
         }
+        println!("Made it");
         //2. Check if the ZipNode is already in a kbucket 
         for element in main_node.kbuckets[i].iter_mut() {
             if *element == zip_node {
@@ -192,21 +186,25 @@ impl ZipNode {
         true
     }
 
-    pub fn add_entry(main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode, i: usize /*ID distance*/) -> bool {
+    pub fn add_entry(main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode) -> bool {
         //1. If the above checks all fail, then you can add the ZipNode to the kbucket!
-        if !Self::check_zipnode(main_node, zip_node.clone(), i) {
-            return true;
+        let i : usize = Node::key_distance(main_node.id, zip_node.id);
+        println!("Index: {}", i);
+        if  main_node.kbuckets.len() >= i+1 &&
+            !Self::check_zipnode(main_node, zip_node.clone(), i) {
+            return false;
         }
         if main_node.kbuckets.len() >= i+1 {
             if let Some(x)  = main_node.kbuckets.get_mut(i) {
                 x.push_back(zip_node);
             }
         } else {
+            println!("Does control flow go here?");
             let mut q = LinkedList::new();
             q.push_back(zip_node);
             main_node.kbuckets[i] = q;
         }
-        false
+        true
     }
 
     pub fn remove_entry(main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode, i: usize) -> bool {
