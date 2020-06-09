@@ -211,7 +211,7 @@ impl RPCMessage {
 
         //// Add zipnode to kbuckets
         // let dist = nodes::Node::key_distance(current.get_id(), self.caller_node.id);
-        // nodes::ZipNode::add_entry(current, self.caller_node.clone(), dist);
+        nodes::ZipNode::add_entry(current, self.caller_node.clone());
 
         let replys = match &self.payload {
             RPCType::Ping => self.ping(current),

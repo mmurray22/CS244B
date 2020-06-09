@@ -1,4 +1,3 @@
-
 extern crate crypto;
 extern crate rand;
 extern crate queue;
@@ -31,7 +30,6 @@ fn main () -> () {
         bootstrap(test_node, args[2].clone(), base_id.clone());
     }
 }
-
 
 fn bootstrap(mut pre_node: Box<nodes::Node>, base_ip: String, base_id: nodes::ID) {
     let default_zip = nodes::ZipNode::new(base_id, base_ip, DEFAULT_PORT);
@@ -145,5 +143,4 @@ fn run_test_harness() {
             Err(error) => println!("error: {}", error),
         }
     }
-    
 }

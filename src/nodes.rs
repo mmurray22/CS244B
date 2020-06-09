@@ -167,15 +167,12 @@ impl ZipNode {
     
     pub fn check_zipnode (main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode, i: usize) -> bool {
         //1. Check if there is room to add a ZipNode
-        println!("Here!");
         if main_node.kbuckets[i].len() == BUCKET_SIZE {
             /*Just check if oldest of 20 nodes is dead*/
-            println!("Thorough");
             if /*TODO check_node(main_node.kbuckets[i].back().unwrap().clone())*/ true {
                 return false;
             }
         }
-        println!("Made it");
         //2. Check if the ZipNode is already in a kbucket 
         for element in main_node.kbuckets[i].iter_mut() {
             if *element == zip_node {
@@ -189,7 +186,6 @@ impl ZipNode {
     pub fn add_entry(main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode) -> bool {
         //1. If the above checks all fail, then you can add the ZipNode to the kbucket!
         let i : usize = Node::key_distance(main_node.id, zip_node.id);
-        println!("Index: {}", i);
         if  main_node.kbuckets.len() >= i+1 &&
             !Self::check_zipnode(main_node, zip_node.clone(), i) {
             return false;
@@ -199,7 +195,6 @@ impl ZipNode {
                 x.push_back(zip_node);
             }
         } else {
-            println!("Does control flow go here?");
             let mut q = LinkedList::new();
             q.push_back(zip_node);
             main_node.kbuckets[i] = q;
