@@ -1,4 +1,3 @@
-
 extern crate crypto;
 extern crate rand;
 extern crate queue;
@@ -32,7 +31,6 @@ fn main () -> () {
     }
 }
 
-
 fn bootstrap(mut pre_node: Box<nodes::Node>, base_ip: String, base_id: nodes::ID) {
     let default_zip = nodes::ZipNode::new(base_id, base_ip, DEFAULT_PORT);
     let pre_node_id = pre_node.get_id(); //nodes::Node::get_id(&pre_node); 
@@ -60,6 +58,7 @@ fn run_test_harness() {
         // Generates empty rpc
         let mut rpc = test_harness::kademlia::RPCMessage {
             rpc_token: test_harness::kademlia::nodes::ID {id: [0; 20]},
+            lookup_key: 0,
             caller_node: test_harness::kademlia::nodes::ZipNode {
                 id: test_harness::kademlia::nodes::ID { id: [0; 20]},
                 ip: "1".to_string(),
@@ -73,7 +72,7 @@ fn run_test_harness() {
             Ok(n) => {
                 let split = input.split_whitespace();
                 let args = split.collect::<Vec<&str>>();
-                if(args.len() == 0) {break;}
+                if args.len() == 0 {break;}
 
                 match args[0] {
                     "ping" => {
@@ -145,5 +144,4 @@ fn run_test_harness() {
             Err(error) => println!("error: {}", error),
         }
     }
-    
 }
