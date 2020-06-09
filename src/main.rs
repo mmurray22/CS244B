@@ -10,9 +10,8 @@ extern crate serde_json;
 extern crate serde_derive;
 
 use std::env;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::str::FromStr;
-use std::io::{self, Read};
+use std::io::{self};
 
 mod nodes;
 mod routing;
@@ -38,10 +37,10 @@ fn bootstrap(mut pre_node: Box<nodes::Node>, base_ip: String, base_id: nodes::ID
     let default_zip = nodes::ZipNode::new(base_id, base_ip, DEFAULT_PORT);
     let pre_node_id = pre_node.get_id(); //nodes::Node::get_id(&pre_node); 
     let dist = nodes::Node::key_distance(base_id, pre_node_id);
-    nodes::ZipNode::add_entry(&mut pre_node, default_zip, dist);
+    nodes::ZipNode::add_entry(&mut pre_node, default_zip);
 
     //Invoke Self Find_Node RPC
-    //find_node();
+    //kademlia::RPCMessage::find(true, &pre_node);
 }
 
 fn run_test_harness() {
@@ -54,7 +53,7 @@ fn run_test_harness() {
     }
 
     // Continually recieved stdin, arg 0 is rpc, arg 1 is source, arg 2 is dest
-    while true {
+    loop {
         let mut input = String::new();
 
         // Generates empty rpc

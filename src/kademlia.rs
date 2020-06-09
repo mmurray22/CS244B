@@ -70,7 +70,7 @@ impl RPCMessage {
 						-> Vec<nodes::ZipNode>{
 		let mut ret_vec = Vec::with_capacity(nodes::BUCKET_SIZE);
 		let mut dist = nodes::Node::key_distance(target_id, self_id);
-		while true {
+		loop {
 			if ret_vec.len() < ALPHA && dist != 0 {
 				dist-=1;
 			} else {
@@ -130,7 +130,7 @@ impl RPCMessage {
         return replys;
     }
     
-    fn find(&self, is_fnode: bool, current: &mut Box<nodes::Node>) 
+    pub fn find(&self, is_fnode: bool, current: &mut Box<nodes::Node>) 
             -> Vec<(String,RPCMessage)> {
 
         // TODO 
