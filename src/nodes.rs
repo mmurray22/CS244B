@@ -7,6 +7,7 @@ use crypto::sha1::Sha1;
 
 pub const BUCKET_SIZE: usize = 20; //Maximum length of kbuckets
 const BIT_SLICES: usize = 20; //8*20 = 160 bits
+const ALPHA : usize = 3;
 
 #[allow(dead_code)]
 const DISTANCE_POINTS: usize = 160; //160 distance points
@@ -214,16 +215,54 @@ impl ZipNode {
         true
     }
 
-    pub fn lookup_init(key: ID) -> Vec<ZipNode> /*ALPHA Nodes*/ {
-        let dummy = Vec::<ZipNode>::new();
-        dummy
+    /*Find ALPHA closest nodes*/
+    //pub fn lookup_init(key: ID) -> Vec<ZipNode> /*ALPHA Nodes*/
+    pub fn lookup_init(target_id: ID, self_id: ID, kbuckets: Vec<LinkedList<ZipNode>>)
+                        -> Vec<ZipNode>{
+        //1. Get all k nodes with IDs closest to the target_id 
+        let mut ret_vec = Vec::with_capacity(BUCKET_SIZE);
+        let mut dist = Node::key_distance(target_id, self_id);
+        loop {
+            if ret_vec.len() < ALPHA && dist != 0 {
+                dist-=1;
+            } else {
+                break;
+            }
+            let mut iter = kbuckets[dist].iter();
+            while iter.next() != None {
+                if ret_vec.len() < ALPHA {
+                    ret_vec.push((iter.next().unwrap()).clone());
+                } else {
+                    break;
+                }
+            }
+
+        }
+        return ret_vec;
     }
 
-    pub fn lookup_update(key: ID, zip_node : ZipNode) -> Vec<ZipNode> {
-        let dummy = Vec::<ZipNode>::new();
+    pub fn lookup_update(target_id: ID, zip_node : ZipNode, closest_k: &mut Vec<ZipNode>) -> Vec<ZipNode> {
+        //2. Order those k nodes and select the closest ALPHA
+        closest_k.sort_by(|a, b| (Node::key_distance(b.id, target_id)).cmp(&(Node::key_distance(a.id, target_id))));
+        let ret = Node::key_distance(closest_k[0].id, target_id) > Node::key_distance(zip_node.id, target_id) &&
+                  Node::key_distance(closest_k[1].id, target_id) > Node::key_distance(zip_node.id, target_id) &&
+                  Node::key_distance(closest_k[2].id, target_id) > Node::key_distance(zip_node.id, target_id);
+        //2.5 If there is no closest ALPHA, then return!
+        if ret {
+            let mut ret_vec = Vec::<ZipNode>::new();
+            ret_vec.push(zip_node);
+            return ret_vec;
+        }
+        //3. ?? Recursively lookup nodes in those nodes TODO: Need to change to RPC calls!
+        //let node_one = RPCMessage::lookup(self, target_id, closest_k[0].clone(), origin_kbuckets.clone());
+        //let node_two = RPCMessage::lookup(self, target_id, closest_k[1].clone(), origin_kbuckets.clone());
+        //let node_three = RPCMessage::lookup(self, target_id, closest_k[2].clone(), origin_kbuckets.clone());
+        
+		let dummy = Vec::<ZipNode>::new();
         dummy
     }
 
     pub fn lookup_end(key: ID) -> () {
+    
     }
 }
