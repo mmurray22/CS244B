@@ -57,7 +57,8 @@ fn run_test_harness() {
     }
 
     let rpc = test_harness::kademlia::RPCMessage {
-        caller: test_harness::kademlia::nodes::ZipNode {
+        rpc_token: test_harness::kademlia::nodes::ID {id: [0; 20]},
+        caller_node: test_harness::kademlia::nodes::ZipNode {
             id: test_harness::kademlia::nodes::ID { id: [0; 20]},
             ip: "Client".to_string(),
             port: 0 },

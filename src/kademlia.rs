@@ -71,32 +71,32 @@ impl RPCMessage {
         return replys;
     }
     
-    pub fn find(&self, id: nodes::ID, is_fnode: bool) {
-        let mut closest = Vec::with_capacity(BUCKET_SIZE);
-        if is_fnode {
+    // pub fn find(&self, id: nodes::ID, is_fnode: bool) {
+    //     let mut closest = Vec::with_capacity(nodes::BUCKET_SIZE);
+    //     if is_fnode {
             
-        }
-    }
+    //     }
+    // }
 
-    //! Notes for lookup algoirthm: 
-    pub fn lookup(&self, target_id: nodes::ID, closest: Vec/*can closest be sorted BEFORE we call it?*/) -> Vec{
-        let dist = xor(target_id, self.id);
-        let lookup_nodes = Vec::with_capacity(ALPHA);
-        while lookup_nodes.len() < ALPHA {
-            lookup_nodes.sort_by(|a, b| (xor(b.id, target_id)).cmp(&(xor(a.id, target_id))));
-            for i in 0..self.kbuckets[dist].len() {
-                /*get top three nodes! TODO*/
-                if lookup_nodes.len() == ALPHA {
-                    break;
-                }
-                lookup_nodes.push_back(self.kbuckets[dist][i]);
-            }
-            break;
-        }
-        lookup(lookup_nodes[0]);
-        lookup(lookup_nodes[1]);
-        lookup(lookup_nodes[2]);
-    }
+    //// ! Notes for lookup algoirthm: 
+    // pub fn lookup(&self, target_id: nodes::ID, closest: Vec/*can closest be sorted BEFORE we call it?*/) -> Vec{
+    //     let dist = xor(target_id, self.id);
+    //     let lookup_nodes = Vec::with_capacity(ALPHA);
+    //     while lookup_nodes.len() < ALPHA {
+    //         lookup_nodes.sort_by(|a, b| (xor(b.id, target_id)).cmp(&(xor(a.id, target_id))));
+    //         for i in 0..self.kbuckets[dist].len() {
+    //             /*get top three nodes! TODO*/
+    //             if lookup_nodes.len() == ALPHA {
+    //                 break;
+    //             }
+    //             lookup_nodes.push_back(self.kbuckets[dist][i]);
+    //         }
+    //         break;
+    //     }
+    //     lookup(lookup_nodes[0]);
+    //     lookup(lookup_nodes[1]);
+    //     lookup(lookup_nodes[2]);
+    // }
 
     pub fn store(&self, key: u64, val: u64, current: &Box<nodes::Node>) 
             -> Vec<(String,RPCMessage)> { 

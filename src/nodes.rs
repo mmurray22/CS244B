@@ -7,7 +7,7 @@ use crypto::digest::Digest;
 use crypto::sha1::Sha1;
 //use std::collections::LinkedList;
 
-const BUCKET_SIZE: usize = 20; //Maximum length of kbuckets
+pub const BUCKET_SIZE: usize = 20; //Maximum length of kbuckets
 const BIT_SLICES: usize = 20; //8*20 = 160 bits
 
 #[allow(dead_code)]

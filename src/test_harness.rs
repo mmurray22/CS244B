@@ -45,7 +45,8 @@ impl Network {
 
 	pub fn client_remove_node(&mut self, ip: String) {
 		let kill = kademlia::RPCMessage {
-			caller: kademlia::nodes::ZipNode {
+			rpc_token: kademlia::nodes::ID {id: [0; 20]},
+			caller_node: kademlia::nodes::ZipNode {
 				id: kademlia::nodes::ID { id: [0; 20]},
 				ip: "".to_string(),
 				port: 0 },
@@ -63,7 +64,8 @@ impl Drop for Network {
 	fn drop(&mut self) {
 		for node in &mut self.nodes_map.lock().unwrap().values() {
 			let kill = kademlia::RPCMessage {
-				caller: kademlia::nodes::ZipNode {
+				rpc_token: kademlia::nodes::ID {id: [0; 20]},
+				caller_node: kademlia::nodes::ZipNode {
 					id: kademlia::nodes::ID { id: [0; 20]},
 					ip: "".to_string(),
 					port: 0 },
@@ -162,14 +164,12 @@ fn debug(rpc: kademlia::RPCMessage, node: &Box<kademlia::nodes::Node>) -> Vec<(S
 			println!("Node {:?} recieved debug to {:?} from {:?}", 
 			kademlia::nodes::Node::get_id(node),
 			rpc.callee_id,
-			rpc.caller.ip);
+			rpc.caller_node.ip);
 		}
 		_ => {}
 	}
 	let replys = Vec::new();
 	return replys;
 }
-
-
 
 
