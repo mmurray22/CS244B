@@ -30,17 +30,7 @@ impl Network {
 		let (tx, thread) = start_network_node(ip.clone(), port, self.nodes_map.clone());
 		self.nodes_vec.push(Some(thread));
 		self.nodes_map.lock().unwrap().insert(ip,tx);
-	}
 
-	// Sends rpc to node with passed ip
-	// TODO convert rpc from String to actual RPC struct
-	pub fn send_rpc(&mut self, ip: String, msg: kademlia::RPCMessage) {
-		match self.nodes_map.lock().unwrap().get(&ip) {
-			Some(node) => {
-				node.send(msg).expect("Failed to send");
-			},
-			None => println!("Can't find node with ip: {:?}", &ip)
-		}
 	}
 
 	pub fn client_remove_node(&mut self, ip: String) {
@@ -53,7 +43,19 @@ impl Network {
 			callee_id: kademlia::nodes::ID {id: [0; 20]},
 			payload: kademlia::RPCType::KillNode
 		};
-		self.send_rpc(ip,kill);
+		self.send_rpc(ip.clone(),kill);
+		self.nodes_map.lock().unwrap().remove(&ip);
+	}
+
+	// Sends rpc to node with passed ip
+	// TODO convert rpc from String to actual RPC struct
+	pub fn send_rpc(&mut self, ip: String, msg: kademlia::RPCMessage) {
+		match self.nodes_map.lock().unwrap().get(&ip) {
+			Some(node) => {
+				node.send(msg).expect("Failed to send");
+			},
+			None => println!("Can't find node with ip: {:?}", &ip)
+		}
 	}
 }
 

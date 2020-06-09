@@ -45,8 +45,9 @@ fn bootstrap(mut pre_node: Box<nodes::Node>, base_ip: String, base_id: nodes::ID
 }
 
 fn run_test_harness() {
-    let num_nodes = 10;
+    let mut num_nodes = 10;
 
+    // Creates network and adds nodes
     let mut network = test_harness::Network::new();
     for i in 0..num_nodes {
         // port is always 0
@@ -119,12 +120,28 @@ fn run_test_harness() {
                             args[2].parse::<u64>().unwrap());
                         network.send_rpc(args[1].to_string(), rpc);
                     },
+                    "add" => {
+                        // Ex. "add"
+                        if args.len() != 1 {
+                            println!("Invalid Command");
+                            continue
+                        }
+
+                        network.client_add_node(num_nodes.to_string(),0);
+                        num_nodes += 1;
+
+                    },
+                    "remove" => {
+                        // Ex. "remove 1"
+                        if args.len() != 2 {
+                            println!("Invalid Command");
+                            continue
+                        }
+                        network.client_remove_node(args[1].to_string())
+                    },
 
                     _ => break
-                }
-                
-                
-                
+                }  
             }
             Err(error) => println!("error: {}", error),
         }

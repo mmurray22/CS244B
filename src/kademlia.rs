@@ -94,7 +94,7 @@ impl RPCMessage {
         println!("Ping from {:?} to {:?}",self.caller_node.ip, current.get_ip());
 
         let mut replys = Vec::new();
-        
+
         replys.push((self.caller_node.ip.clone(), RPCMessage {
             rpc_token: nodes::ID {id: [0; 20]},
             caller_node: nodes::ZipNode {
@@ -209,7 +209,7 @@ impl RPCMessage {
     pub fn recieve_rpc(&self, current: &mut Box<nodes::Node>) 
             -> Vec<(String,RPCMessage)> {
 
-        // Add zipnode to kbuckets
+        //// Add zipnode to kbuckets
         // let dist = nodes::Node::key_distance(current.get_id(), self.caller_node.id);
         // nodes::ZipNode::add_entry(current, self.caller_node.clone(), dist);
 
