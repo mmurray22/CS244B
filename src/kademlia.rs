@@ -53,6 +53,18 @@ impl RPCMessage {
 
     //! Notes for lookup algoirthm: 
     pub fn lookup(&self, target_id: nodes::ID, closest: Vec/*can closest be sorted BEFORE we call it?*/) -> Vec{
+        let dist = xor(target_id, self.id);
+        let lookup_nodes = Vec::with_capacity(ALPHA);
+        while lookup_nodes.len() < ALPHA {
+            lookup_nodes.sort_by(|a, b| (xor(b.id, target_id)).cmp(&(xor(a.id, target_id))));
+            for i in 0..self.kbuckets[dist].len() {
+            }
+        }
+
+        for i in 0..self.kbuckets[dist] {
+            
+        }
+        let mut queried = HashSet::new(); //Query 
         if closest.len() == 0 {
             return found_node;
         }
