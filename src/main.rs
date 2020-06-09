@@ -17,7 +17,6 @@ mod nodes;
 mod routing;
 mod test_harness;
 mod kademlia;
-mod network_node;
 
 pub const DEFAULT_PORT: u64 = 444;
 
