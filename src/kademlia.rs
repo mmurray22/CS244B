@@ -29,7 +29,7 @@ pub enum RPCType {
 
 #[derive(Clone)]
 pub struct RPCMessage {
-    // Purpose of rpc token?
+    // Purpose of rpc token? It signs all the rpc messages
     pub rpc_token: nodes::ID,
     pub caller_node: nodes::ZipNode,
     pub callee_id: nodes::ID,
@@ -64,34 +64,53 @@ impl RPCMessage {
         let replys = Vec::new();
         return replys;
     }
+/*
+	fn find_k_closest_nodes(target_id: nodes::ID, self_id: nodes::ID, kbuckets: Vec<LinkedList<nodes::ZipNode>>) 
+						-> Vec<nodes::ZipNode>{
+		let mut ret_vec = Vec::with_capacity(BUCKET_SIZE);
+		let mut dist = xor(target_id, self_id);
+		while true {
+			if ret_vec.len() < ALPHA && dist != 0 {
+				dist-=1;
+			} else {
+				break;
+			}
+			let mut iter = kbuckets[dist].iter();
+			while iter.next() != None {
+				if ret_vec.len() < ALPHA {
+					ret_vec.push_back(iter.next().unwrap());
+				} else {
+					break;
+				}
+			}
+			
+		}
+		return ret_vec;
+	}
     
-    // pub fn find(&self, id: nodes::ID, is_fnode: bool) {
-    //     let mut closest = Vec::with_capacity(nodes::BUCKET_SIZE);
-    //     if is_fnode {
-            
-    //     }
-    // }
-
-    //// ! Notes for lookup algoirthm: 
-    // pub fn lookup(&self, target_id: nodes::ID, closest: Vec/*can closest be sorted BEFORE we call it?*/) -> Vec{
-    //     let dist = xor(target_id, self.id);
-    //     let lookup_nodes = Vec::with_capacity(ALPHA);
-    //     while lookup_nodes.len() < ALPHA {
-    //         lookup_nodes.sort_by(|a, b| (xor(b.id, target_id)).cmp(&(xor(a.id, target_id))));
-    //         for i in 0..self.kbuckets[dist].len() {
-    //             /*get top three nodes! TODO*/
-    //             if lookup_nodes.len() == ALPHA {
-    //                 break;
-    //             }
-    //             lookup_nodes.push_back(self.kbuckets[dist][i]);
-    //         }
-    //         break;
-    //     }
-    //     lookup(lookup_nodes[0]);
-    //     lookup(lookup_nodes[1]);
-    //     lookup(lookup_nodes[2]);
-    // }
-
+    fn lookup(&self, target_id: nodes::ID) -> Box<nodes::Node> {
+        //1. Get all k nodes with IDs closest to the target_id
+        let closest_k : Vec = find_k_closest_nodes(target_id, self.id, &self.kbuckets);
+        //2. Order those k nodes and select the closest ALPHA
+        closest_k.sort_by(|a, b| (xor(b.id, target_id)).cmp(&(xor(a.id, target_id))));
+        let ret = xor(closest_k[0].id, target_id) > xor(self.id, target_id) &&
+				  xor(closest_k[1].id, target_id) > xor(self.id, target_id) &&
+				  xor(closest_k[2].id, target_id) > xor(self.id, target_id);
+        //2.5 If there is no closest ALPHA, then return!
+        if (ret) {
+            return self;
+        }
+        //3. Recursively lookup nodes in those nodes
+        let node_one = lookup(closest_k[0], target_id);
+        let node_two = lookup(closest_k[1], target_id);
+		let node_three = lookup(closest_k[2], target_id);
+        //4. OPTIONAL? -> Once this recursive lookup is done on the alpha, investigate the other k-ALPHA
+        //5. Once that is done, return the selected node.
+		let node_cmp = xor(node_one.id, target_id) < xor(node_two.id, target_id) ? node_one; node_two;
+		let node_final = xor(node_cmp.id, target_id) < xor(node_three.id, target_id) ? node_cmp; node_three;
+		return node_final;
+    }
+*/
     fn store(&self, current: &mut Box<nodes::Node>) 
             -> Vec<(String,RPCMessage)> { 
 
