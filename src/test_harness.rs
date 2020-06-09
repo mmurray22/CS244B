@@ -93,14 +93,14 @@ fn start_network_node(ip: String, port: u64,
 
 	// Thread continuously waits on its RPC queue until it receives kill msg
 	let thread = thread::spawn(move || {
-		let me = Box::new(<kademlia::nodes::Node as kademlia::nodes::NodeTrait>::new(ip, port));
+		let me = Box::new(kademlia::nodes::Node::new(ip, port));
 		let net = network;
 		loop {
 			let rpc = rx.recv().expect("Error in receiving RPC");
 			match rpc.payload {
 				kademlia::RPCType::KillNode => {
 					println!("received: KILL {:?}", 
-						<kademlia::nodes::Node as kademlia::nodes::NodeTrait>::get_ip(&me));
+						kademlia::nodes::Node::get_ip(&me));
 					break;
 				},
 				_ => handle(&me,rpc,&net)
@@ -143,7 +143,7 @@ fn debug(rpc: kademlia::RPCMessage, node: &Box<kademlia::nodes::Node>) -> (Strin
 	match rpc.payload {
 		kademlia::RPCType::Debug => {
 			println!("Node {:?} recieved debug to {:?} from {:?}", 
-			<kademlia::nodes::Node as kademlia::nodes::NodeTrait>::get_id(node),
+			kademlia::nodes::Node::get_id(node),
 			rpc.callee_id,
 			rpc.caller.ip);
 		}
