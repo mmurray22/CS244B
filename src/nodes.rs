@@ -142,9 +142,9 @@ impl Node {
         ZipNode::add_entry(primary_node, small_node)
     }
 
-    pub fn store_value (key: u64, val: u64, node: &mut Box<Node>) -> bool {
+    pub fn store_value (&mut self, key: u64, val: u64) -> bool {
         let pair = Pair{key: key, value: val};
-        node.storage.push(pair);  
+        self.storage.push(pair);  
         true
     }
 }

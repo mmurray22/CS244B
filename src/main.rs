@@ -72,15 +72,58 @@ fn run_test_harness() {
             Ok(n) => {
                 let split = input.split_whitespace();
                 let args = split.collect::<Vec<&str>>();
+                if(args.len() == 0) {break;}
+
                 match args[0] {
                     "ping" => {
+                        // Ex. "ping 1 2"
+                        if args.len() != 3 {
+                            println!("Invalid Command");
+                            continue;
+                        }
+                        rpc.caller_node.ip = args[1].to_string();
                         rpc.payload = test_harness::kademlia::RPCType::Ping;
+                        network.send_rpc(args[2].to_string(), rpc);
                     },
+                    "store" => {
+                        // Ex. "store 1 2 34 34"
+                        if args.len() != 5 {
+                            println!("Invalid Command");
+                            continue
+                        }
+                        rpc.caller_node.ip = args[1].to_string();
+                        rpc.payload = test_harness::kademlia::RPCType::Store(
+                            args[3].parse::<u64>().unwrap(),args[4].parse::<u64>().unwrap());
+                        network.send_rpc(args[2].to_string(), rpc);
+                    },
+                    "cstore" => {
+                        // Ex. "cstore 1 34 34"
+                        if args.len() != 4 {
+                            println!("Invalid Command");
+                            continue
+                        }
+                        rpc.caller_node.ip = "client".to_string();
+                        rpc.payload = test_harness::kademlia::RPCType::ClientStore(
+                            args[2].parse::<u64>().unwrap(),args[3].parse::<u64>().unwrap());
+                        network.send_rpc(args[1].to_string(), rpc);
+                    },
+                    "cget" => {
+                        // Ex. "cget 1 34"
+                        if args.len() != 3 {
+                            println!("Invalid Command");
+                            continue
+                        }
+                        rpc.caller_node.ip = "client".to_string();
+                        rpc.payload = test_harness::kademlia::RPCType::ClientGet(
+                            args[2].parse::<u64>().unwrap());
+                        network.send_rpc(args[1].to_string(), rpc);
+                    },
+
                     _ => break
                 }
                 
-                rpc.caller_node.ip = args[1].to_string();
-                network.send_rpc(args[2].to_string(), rpc);
+                
+                
             }
             Err(error) => println!("error: {}", error),
         }

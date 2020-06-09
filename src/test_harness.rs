@@ -124,7 +124,7 @@ fn handle(current: &mut Box<kademlia::nodes::Node>, rpc: kademlia::RPCMessage,
 
 	let replys = match rpc.payload {
 		kademlia::RPCType::Debug => debug(rpc, current),
-		kademlia::RPCType::Debug => debug(rpc, current),
+		kademlia::RPCType::KillNode => debug(rpc, current),
 		_ => rpc.recieve_rpc(current),
 	};
 
