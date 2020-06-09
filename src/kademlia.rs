@@ -199,6 +199,8 @@ impl RPCMessage {
     fn client_get(&self, current: &mut Box<nodes::Node>) 
             -> Vec<(String,RPCMessage)> {
 
+        println!("ClientGet from {:?} to {:?}",self.caller_node.ip, current.get_ip());
+
         // TODO
         // Init client lookup for k closest nodes, one of them should have value
 

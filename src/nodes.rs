@@ -28,11 +28,12 @@ pub struct ID{
 }
 
 pub struct Node {
-    pub id: ID,
-    pub ip: String,
-    pub port: u64,
-    pub storage: Vec<Pair>,
-    pub kbuckets: Vec<LinkedList<ZipNode>>,
+    id: ID,
+    key: u64,
+    ip: String,
+    port: u64,
+    storage: Vec<Pair>,
+    kbuckets: Vec<LinkedList<ZipNode>>,
 }
 
 #[derive(Clone)]
@@ -44,7 +45,7 @@ pub struct ZipNode {
 
 trait IDTrait {
     fn get_id(self) -> ID; /**/
-    fn get_key_hash(key: u64, res: &mut [u8]); /*Sha1 Hashes key*/
+    fn get_key_hash(key: u64) -> [u8; BIT_SLICES]; /*Sha1 Hashes key*/
     fn xor(id1: ID, id2: ID) -> usize;
     fn get_random_node_id () -> ID;
 }
@@ -53,10 +54,12 @@ impl IDTrait for ID {
     fn get_id(self) -> ID {
         ID{id: self.id}  
     }
-    fn get_key_hash(key: u64, res: &mut [u8]) {
+    fn get_key_hash(key: u64) -> [u8; BIT_SLICES]{
         let mut hasher = Sha1::new();
+        let mut array = [0; BIT_SLICES];
         hasher.input(&key.to_ne_bytes());
-        hasher.result(res);
+        hasher.result(&mut array);
+        array
     }
 
     fn xor(id1: ID, id2: ID) -> usize {
@@ -93,8 +96,11 @@ impl FromStr for ID {
 
 impl Node {
     pub fn new (ip: String, port: u64) -> Box<Node> {
+        let key = rand::random();
+        // let mut array: [u8; BIT_SLICES] = [0; BIT_SLICES];
         let mut node = Box::new(Node{
-            id: ID::get_random_node_id(),
+            id: ID {id: ID::get_key_hash(key)},
+            key,
             ip: ip,
             port: port,
             storage: Vec::new(),
@@ -115,6 +121,10 @@ impl Node {
 
     pub fn get_id (&self) -> ID { // [u8; BIT_SLICES] {
         self.id
+    }
+
+    pub fn get_key (&self) -> u64 { // [u8; BIT_SLICES] {
+        self.key
     }
 
     pub fn key_distance (node_id1: ID, node_id2: ID) -> usize {
