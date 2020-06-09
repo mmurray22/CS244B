@@ -3,12 +3,9 @@ CS 244B project
 
 ![](https://github.com/mmurray22/CS244B/workflows/Rust/badge.svg?event=push)
 
-Current Objective: Recreate Kademlia DHT
+Current Objective: Recreate Kademlia DHT in Rust
 
-Kademlia Parameters that still need to be defined:
--How "close" is close?
-
--Any and all routing stuff
+Current Goals:
 
 -Creating a preliminary test network of nodes for basic functionality
 
