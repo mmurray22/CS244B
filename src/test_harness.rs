@@ -97,7 +97,7 @@ fn start_network_node(ip: String, port: u64,
 	let thread = thread::spawn(move || {
 
 		// Inits threads node, and routing table.
-		let me = Box::new(kademlia::nodes::Node::new(ip, port));
+		let mut me = Box::new(kademlia::nodes::Node::new(ip, port));
 		let net = network;
 		let mut r_table = Box::new(HashMap::new());
 
@@ -109,7 +109,7 @@ fn start_network_node(ip: String, port: u64,
 						kademlia::nodes::Node::get_ip(&me));
 					break;
 				},
-				_ => handle(&me, rpc, &net, &mut r_table)
+				_ => handle(&mut me, rpc, &net, &mut r_table)
 			}
 		}
 	});
@@ -118,41 +118,31 @@ fn start_network_node(ip: String, port: u64,
 }
 
 
-fn handle(me: &Box<kademlia::nodes::Node>, rpc: kademlia::RPCMessage, 
+fn handle(current: &mut Box<kademlia::nodes::Node>, rpc: kademlia::RPCMessage, 
 		network: &Arc<Mutex<HashMap<String,Sender<kademlia::RPCMessage>>>>,
 		r_table: &mut Box<HashMap<String,Sender<kademlia::RPCMessage>>>) {
 
 	let replys = match rpc.payload {
-		kademlia::RPCType::Ping(ref node) => rpc.ping(node.clone(), me),
-    	kademlia::RPCType::PingReply(flag) => rpc.ping_reply(flag, me),
-    	kademlia::RPCType::Store(key, val) => rpc.store(key, val, me),
-    	kademlia::RPCType::StoreReply(flag) => rpc.store_reply(flag, me),
-    	kademlia::RPCType::FindNode(id) => rpc.find(id, true, me),
-    	kademlia::RPCType::FindValue(id) => rpc.find(id, false, me),
-    	kademlia::RPCType::FindReply(ref node)=> rpc.find_reply(node.clone(), me),
-		_ => debug(rpc, me),
+		kademlia::RPCType::Debug => debug(rpc, current),
+		kademlia::RPCType::Debug => debug(rpc, current),
+		_ => rpc.recieve_rpc(current),
 	};
 
-	// Sends all replys asyncronously
+	// Sends all replys 
 	for (ip,reply) in replys {
-		match reply.payload {
-			kademlia::RPCType::Null => {},
-			_ => {
-				match r_table.get(&ip) {
+		match r_table.get(&ip) {
+			Some(tx) => {
+				tx.send(reply).expect("Failed to send");
+			},
+			None => {
+				match network.lock().unwrap().get(&ip) {
 					Some(tx) => {
+						// Add tx clone to thread table if it doesn't have it
+						r_table.insert(ip.clone(), tx.clone());
 						tx.send(reply).expect("Failed to send");
 					},
-					None => {
-						match network.lock().unwrap().get(&ip) {
-							Some(tx) => {
-								r_table.insert(ip.clone(), tx.clone());
-								tx.send(reply).expect("Failed to send");
-							},
-							None => println!("Can't find node with ip: {:?}", &ip)
-						}
-					}
+					None => println!("Can't find node with ip: {:?}", &ip)
 				}
-				
 			}
 		}
 	}
@@ -166,7 +156,7 @@ fn debug(rpc: kademlia::RPCMessage, node: &Box<kademlia::nodes::Node>) -> Vec<(S
 			rpc.callee_id,
 			rpc.caller_node.ip);
 		}
-		_ => {}
+		_ => println!("IMPOSSIBLE")
 	}
 	let replys = Vec::new();
 	return replys;

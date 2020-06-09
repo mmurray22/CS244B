@@ -13,61 +13,55 @@
 
 const ALPHA : u64 = 3;
 
+#[derive(Clone)]
 pub enum RPCType {
-    Ping(nodes::ZipNode),
-    PingReply(bool),
+    Ping,
+    PingReply,
     Store(u64, u64),
-    StoreReply(bool),
+    StoreReply,
     FindNode(nodes::ID),
     FindValue(nodes::ID),
     FindReply(nodes::ZipNode),
+    Value(u64),
     KillNode,
     Debug,
-    Null,
 }
 
-// #[derive(Serialize, Deserialize, Debug)]
+#[derive(Clone)]
 pub struct RPCMessage {
+    // Purpose of rpc token?
     pub rpc_token: nodes::ID,
     pub caller_node: nodes::ZipNode,
     pub callee_id: nodes::ID,
     pub payload: RPCType,
 }
 
-// pub fn lookup(node: nodes::Node, sig: u32, target_id: nodes::ID) -> 
-
+// Handler functions for all RPCs
 impl RPCMessage {
-    pub fn ping(&self, probe_node: nodes::ZipNode, current: &Box<nodes::Node>) 
+    fn ping(&self, current: &mut Box<nodes::Node>) 
             -> Vec<(String,RPCMessage)> {
-        // let dist = nodes::key_distance(current.id, probe_node.id);
-        // nodes::ZipNode::add_entry(current, self.caller, dist);
-        
-        // let reply = RPCMessage {
-        //     caller: nodes::ZipNode {
-        //         id: nodes::ID { id: [0; 20]},
-        //         ip: "".to_string(),
-        //         port: 0 },
-        //     callee_id: nodes::ID {id: [0; 20]},
-        //     payload: RPCType::Null
-        // };
-        let replys = Vec::new();
-        // replys.push()
+
+        println!("Ping from {:?} to {:?}",self.caller_node.ip, current.get_ip());
+
+        let mut replys = Vec::new();
+        replys.push((self.caller_node.ip.clone(), RPCMessage {
+            rpc_token: nodes::ID {id: [0; 20]},
+            caller_node: nodes::ZipNode {
+                id: current.get_id(),
+                ip: current.get_ip(),
+                port: current.get_port()},
+            callee_id: self.caller_node.id,
+            payload: RPCType::PingReply
+        }));
         return replys;
     }
 
-    pub fn ping_reply(&self, success: bool, current: &Box<nodes::Node>) 
+    fn ping_reply(&self, current: &mut Box<nodes::Node>) 
             -> Vec<(String,RPCMessage)> {
-        
-        // let reply = RPCMessage {
-        //     caller: nodes::ZipNode {
-        //         id: nodes::ID { id: [0; 20]},
-        //         ip: "".to_string(),
-        //         port: 0 },
-        //     callee_id: nodes::ID {id: [0; 20]},
-        //     payload: RPCType::Null
-        // };
+
+        println!("PingACk from {:?} to {:?}",self.caller_node.ip, current.get_ip());
+
         let replys = Vec::new();
-        // replys.push()
         return replys;
     }
     
@@ -98,67 +92,70 @@ impl RPCMessage {
     //     lookup(lookup_nodes[2]);
     // }
 
-    pub fn store(&self, key: u64, val: u64, current: &Box<nodes::Node>) 
+    fn store(&self, current: &mut Box<nodes::Node>) 
             -> Vec<(String,RPCMessage)> { 
-        //TODO
-        // let reply = RPCMessage {
-        //     caller: nodes::ZipNode {
-        //         id: nodes::ID { id: [0; 20]},
-        //         ip: "".to_string(),
-        //         port: 0 },
-        //     callee_id: nodes::ID {id: [0; 20]},
-        //     payload: RPCType::Null
-        // };
+
+        // TODO 
+        // add rpc (key,value) to node storage and send StoreReply
+
         let replys = Vec::new();
         // replys.push()
         return replys;
     }
 
-    pub fn store_reply(&self, success: bool, current: &Box<nodes::Node>) 
+    fn store_reply(&self, current: &mut Box<nodes::Node>) 
             -> Vec<(String,RPCMessage)> {
-        //TODO
-        // let reply = RPCMessage {
-        //     caller: nodes::ZipNode {
-        //         id: nodes::ID { id: [0; 20]},
-        //         ip: "".to_string(),
-        //         port: 0 },
-        //     callee_id: nodes::ID {id: [0; 20]},
-        //     payload: RPCType::Null
-        // };
+
         let replys = Vec::new();
-        // replys.push()
         return replys;
     }
     
-    pub fn find(&self, id: nodes::ID, is_fnode: bool, current: &Box<nodes::Node>) 
+    fn find(&self, is_fnode: bool, current: &mut Box<nodes::Node>) 
             -> Vec<(String,RPCMessage)> {
-        //TODO
-        // let reply = RPCMessage {
-        //     caller: nodes::ZipNode {
-        //         id: nodes::ID { id: [0; 20]},
-        //         ip: "".to_string(),
-        //         port: 0 },
-        //     callee_id: nodes::ID {id: [0; 20]},
-        //     payload: RPCType::Null
-        // };
+
+        // TODO 
+        // send FindReplys for closest k nodes in current.k_buckets
+        // let replys = lookup();
+
         let replys = Vec::new();
         // replys.push()
         return replys;
     }
 
-    pub fn find_reply(&self, reply: nodes::ZipNode, current: &Box<nodes::Node>) 
+    fn find_reply(&self, current: &mut Box<nodes::Node>) 
             -> Vec<(String,RPCMessage)> {
         //TODO
-        // let reply = RPCMessage {
-        //     caller: nodes::ZipNode {
-        //         id: nodes::ID { id: [0; 20]},
-        //         ip: "".to_string(),
-        //         port: 0 },
-        //     callee_id: nodes::ID {id: [0; 20]},
-        //     payload: RPCType::Null
-        // };
+        // Update current lookup and possibly send more find rpcs
         let replys = Vec::new();
         // replys.push()
+        return replys;
+    }
+
+    fn value(&self, current: &mut Box<nodes::Node>) 
+            -> Vec<(String,RPCMessage)> {
+        let replys = Vec::new();
+        return replys;
+    }
+
+    pub fn recieve_rpc(&self, current: &mut Box<nodes::Node>) 
+            -> Vec<(String,RPCMessage)> {
+
+        // Add zipnode to kbuckets
+        // let dist = nodes::Node::key_distance(current.get_id(), self.caller_node.id);
+        // nodes::ZipNode::add_entry(current, self.caller_node.clone(), dist);
+
+        let replys = match &self.payload {
+            RPCType::Ping => self.ping(current),
+            RPCType::PingReply => self.ping_reply(current),
+            RPCType::Store(key, val) => self.store(current),
+            RPCType::StoreReply => self.store_reply(current),
+            RPCType::FindNode(id) => self.find(true, current),
+            RPCType::FindValue(id) => self.find(false, current),
+            RPCType::FindReply(node) => self.find_reply(current),
+            RPCType::Value(val) => self.value(current),
+            _ => Vec::new()
+        };
+
         return replys;
     }
 }

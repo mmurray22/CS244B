@@ -1,4 +1,4 @@
-//#[allow(non_snake_case)]
+
 #![feature(linked_list_remove)]
 use std::collections::LinkedList;
 use std::str::FromStr;
@@ -12,6 +12,9 @@ const BIT_SLICES: usize = 20; //8*20 = 160 bits
 
 #[allow(dead_code)]
 const DISTANCE_POINTS: usize = 160; //160 distance points
+
+pub const K: usize = 2;
+pub const sig: usize = 1;
 
 //const DEFAULT_NODES
 
@@ -103,16 +106,16 @@ impl Node {
         node
     }
 
-    pub fn get_ip (node: &Box<Node>) -> String {
-        (node).ip.clone()
+    pub fn get_ip (&self) -> String {
+        self.ip.clone()
     }
 
-    pub fn get_port (node: &Box<Node>) -> u64 {
-        (node).port
+    pub fn get_port (&self) -> u64 {
+        self.port
     }
 
-    pub fn get_id (node: &Box<Node>) -> [u8; BIT_SLICES] {
-        (node).id.id
+    pub fn get_id (&self) -> ID { // [u8; BIT_SLICES] {
+        self.id
     }
 
     pub fn key_distance (node_id1: ID, node_id2: ID) -> usize {
