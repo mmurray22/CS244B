@@ -90,47 +90,36 @@ impl FromStr for ID {
     }
 }
 
-pub trait NodeTrait {
-    fn new (ip: String, port: u64) -> Box<Node>;
-    fn get_ip(node: &Box<Node>) -> String;
-    fn get_port(node: &Box<Node>) -> u64;
-    fn get_id(node: &Box<Node>) -> [u8; BIT_SLICES];
-    fn key_distance (node_id1: ID, node_id2: ID) -> usize;
-    fn update_node_state (self, args: u64, _ip: String, _port: u64, _value: u64) -> bool;
-    fn update_k_bucket (primary_node: &mut Box<Node>, additional_node: &Box<Node>, i: usize) -> bool;
-    fn store_value (key: u64, value: u64, node: &mut Box<Node>) -> bool;
-}
-
-impl NodeTrait for Node {
-    fn new (ip: String, port: u64) -> Box<Node> {
+impl Node {
+    pub fn new (ip: String, port: u64) -> Box<Node> {
         let node = Box::new(Node{
-                                 id: ID::get_random_node_id(),
-                                 ip: ip,
-                                 port: port,
-                                 storage: Vec::new(),
-                                 kbuckets: Vec::with_capacity(DISTANCE_POINTS),
-                            });
+            id: ID::get_random_node_id(),
+            ip: ip,
+            port: port,
+            storage: Vec::new(),
+            kbuckets: Vec::with_capacity(DISTANCE_POINTS),
+        });
         //TODO: Populate kbuckets with default nodes!
         node
     }
 
-    fn get_ip (node: &Box<Node>) -> String {
+    pub fn get_ip (node: &Box<Node>) -> String {
         (node).ip.clone()
     }
 
-    fn get_port (node: &Box<Node>) -> u64 {
+    pub fn get_port (node: &Box<Node>) -> u64 {
         (node).port
     }
 
-    fn get_id (node: &Box<Node>) -> [u8; BIT_SLICES] {
+    pub fn get_id (node: &Box<Node>) -> [u8; BIT_SLICES] {
         (node).id.id
     }
 
-    fn key_distance (node_id1: ID, node_id2: ID) -> usize {
+    pub fn key_distance (node_id1: ID, node_id2: ID) -> usize {
         ID::xor(node_id1, node_id2)
     }
 
-    fn update_node_state(mut self, args: u64, _ip: String, _port: u64, _value: u64) -> bool {
+    pub fn update_node_state(mut self, args: u64, _ip: String, _port: u64, _value: u64) -> bool {
         if args == 1 { // 01 = ip changed, port not changed
             self.ip = _ip;
         } else if args == 2 { //10 = port changed, ip not changed
@@ -142,7 +131,7 @@ impl NodeTrait for Node {
         true
     }
 
-    fn update_k_bucket (primary_node: &mut Box<Node>, additional_node: &Box<Node>, i: usize) -> bool {
+    pub fn update_k_bucket (primary_node: &mut Box<Node>, additional_node: &Box<Node>, i: usize) -> bool {
         let small_node = ZipNode{
                                   id: additional_node.id, 
                                   ip: additional_node.ip.clone(), 
@@ -151,7 +140,7 @@ impl NodeTrait for Node {
         ZipNode::add_entry(primary_node, small_node, i)
     }
 
-    fn store_value (key: u64, val: u64, node: &mut Box<Node>) -> bool {
+    pub fn store_value (key: u64, val: u64, node: &mut Box<Node>) -> bool {
         let pair = Pair{key: key, value: val};
         node.storage.push(pair);  
         true
@@ -171,8 +160,9 @@ impl PartialEq for ZipNode {
     }
 }
 
-impl RoutingTable for ZipNode {
-    fn new(base_id: ID, base_ip: String, base_port: u64) -> ZipNode {
+// impl RoutingTable for ZipNode {
+impl ZipNode {
+    pub fn new(base_id: ID, base_ip: String, base_port: u64) -> ZipNode {
         let default_zip = ZipNode{
             id: base_id,
             ip: base_ip,
@@ -181,7 +171,7 @@ impl RoutingTable for ZipNode {
         default_zip
     }
     
-    fn check_zipnode (main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode, i: usize) -> bool {
+    pub fn check_zipnode (main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode, i: usize) -> bool {
         //1. Check if there is room to add a ZipNode
         if main_node.kbuckets[i].len() == BUCKET_SIZE {
             /*Just check if oldest of 20 nodes is dead*/
@@ -199,7 +189,7 @@ impl RoutingTable for ZipNode {
         true
     }
 
-    fn add_entry(main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode, i: usize /*ID distance*/) -> bool {
+    pub fn add_entry(main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode, i: usize /*ID distance*/) -> bool {
         //1. If the above checks all fail, then you can add the ZipNode to the kbucket!
         if !Self::check_zipnode(main_node, zip_node.clone(), i) {
             return true;
@@ -216,7 +206,7 @@ impl RoutingTable for ZipNode {
         false
     }
 
-    fn remove_entry(main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode, i: usize) -> bool {
+    pub fn remove_entry(main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode, i: usize) -> bool {
         let mut counter = 0;
         for element in main_node.kbuckets[i].iter_mut() {
             if *element == zip_node {

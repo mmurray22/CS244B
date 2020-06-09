@@ -23,6 +23,7 @@ pub enum RPCType {
     FindReply(nodes::ZipNode),
     KillNode,
     Debug,
+    Null,
 }
 
 // #[derive(Serialize, Deserialize, Debug)]
@@ -36,28 +37,90 @@ pub struct RPCMessage {
 // pub fn lookup(node: nodes::Node, sig: u32, target_id: nodes::ID) -> 
 
 impl RPCMessage {
-    pub fn ping(&self, probe_node: nodes::ZipNode, current: &Box<nodes::Node>) { 
-        //TODO
+    pub fn ping(&self, probe_node: nodes::ZipNode, current: &Box<nodes::Node>) 
+            -> (String,RPCMessage) {
+        // let dist = nodes::
+        // nodes::add_entry(current, self.caller);
+        
+        let reply = RPCMessage {
+            caller: nodes::ZipNode {
+                id: nodes::ID { id: [0; 20]},
+                ip: "".to_string(),
+                port: 0 },
+            callee_id: nodes::ID {id: [0; 20]},
+            payload: RPCType::Null
+        };
+        return ("".to_string(), reply);
     }
 
-    pub fn ping_reply(&self, success: bool, current: &Box<nodes::Node>) {
-        // TODO
+    pub fn ping_reply(&self, success: bool, current: &Box<nodes::Node>) 
+            -> (String,RPCMessage) {
+        
+        let reply = RPCMessage {
+            caller: nodes::ZipNode {
+                id: nodes::ID { id: [0; 20]},
+                ip: "".to_string(),
+                port: 0 },
+            callee_id: nodes::ID {id: [0; 20]},
+            payload: RPCType::Null
+        };
+        return ("".to_string(), reply);
     }
     
-    pub fn store(&self, key: u64, val: u64, current: &Box<nodes::Node>) { 
+    pub fn store(&self, key: u64, val: u64, current: &Box<nodes::Node>) 
+            -> (String,RPCMessage) { 
         //TODO
+        let reply = RPCMessage {
+            caller: nodes::ZipNode {
+                id: nodes::ID { id: [0; 20]},
+                ip: "".to_string(),
+                port: 0 },
+            callee_id: nodes::ID {id: [0; 20]},
+            payload: RPCType::Null
+        };
+        return ("".to_string(), reply);
     }
 
-    pub fn store_reply(&self, success: bool, current: &Box<nodes::Node>) {
+    pub fn store_reply(&self, success: bool, current: &Box<nodes::Node>) 
+            -> (String,RPCMessage) {
         //TODO
+        let reply = RPCMessage {
+            caller: nodes::ZipNode {
+                id: nodes::ID { id: [0; 20]},
+                ip: "".to_string(),
+                port: 0 },
+            callee_id: nodes::ID {id: [0; 20]},
+            payload: RPCType::Null
+        };
+        return ("".to_string(), reply);
     }
     
-    pub fn find(&self, id: nodes::ID, is_fnode: bool, current: &Box<nodes::Node>) {
+    pub fn find(&self, id: nodes::ID, is_fnode: bool, current: &Box<nodes::Node>) 
+            -> (String,RPCMessage) {
         //TODO
+        let reply = RPCMessage {
+            caller: nodes::ZipNode {
+                id: nodes::ID { id: [0; 20]},
+                ip: "".to_string(),
+                port: 0 },
+            callee_id: nodes::ID {id: [0; 20]},
+            payload: RPCType::Null
+        };
+        return ("".to_string(), reply);
     }
 
-    pub fn find_reply(&self, reply: nodes::ZipNode, current: &Box<nodes::Node>) {
+    pub fn find_reply(&self, reply: nodes::ZipNode, current: &Box<nodes::Node>) 
+            -> (String,RPCMessage) {
         //TODO
+        let reply = RPCMessage {
+            caller: nodes::ZipNode {
+                id: nodes::ID { id: [0; 20]},
+                ip: "".to_string(),
+                port: 0 },
+            callee_id: nodes::ID {id: [0; 20]},
+            payload: RPCType::Null
+        };
+        return ("".to_string(), reply);
     }
 
     pub fn send_rpc(&self, node_from: nodes::ZipNode, node_to: nodes::ID, msg_type: u8) {
