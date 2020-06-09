@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::thread;
 use std::sync::{Arc, Mutex, mpsc::*};
 
-#[path = "./nodes.rs"] pub mod nodes;
+// #[path = "./nodes.rs"] pub mod nodes;
 #[path = "./kademlia.rs"] pub mod kademlia;
 // use rpc;
 
@@ -93,13 +93,14 @@ fn start_network_node(ip: String, port: u64,
 
 	// Thread continuously waits on its RPC queue until it receives kill msg
 	let thread = thread::spawn(move || {
-		let me = Box::new(<nodes::Node as nodes::NodeTrait>::new(ip, port));
+		let me = Box::new(<kademlia::nodes::Node as kademlia::nodes::NodeTrait>::new(ip, port));
 		let net = network;
 		loop {
 			let rpc = rx.recv().expect("Error in receiving RPC");
 			match rpc.payload {
 				kademlia::RPCType::KillNode => {
-					println!("received: KILL {:?}", <nodes::Node as nodes::NodeTrait>::get_ip(&me));
+					println!("received: KILL {:?}", 
+						<kademlia::nodes::Node as kademlia::nodes::NodeTrait>::get_ip(&me));
 					break;
 				},
 				_ => handle(&me,rpc,&net)
@@ -111,21 +112,29 @@ fn start_network_node(ip: String, port: u64,
 }
 
 
-fn handle(node: &Box<nodes::Node>, rpc: kademlia::RPCMessage, 
+fn handle(me: &Box<kademlia::nodes::Node>, rpc: kademlia::RPCMessage, 
 		network: &Arc<Mutex<HashMap<String,Sender<kademlia::RPCMessage>>>>) {
 	match rpc.payload {
-		kademlia::RPCType::Debug => debug(rpc, node),
+		kademlia::RPCType::Ping(ref node) => rpc.ping(node.clone(), me),
+    	kademlia::RPCType::PingReply(flag) => rpc.ping_reply(flag, me),
+    	kademlia::RPCType::Store(key, val) => rpc.store(key, val, me),
+    	kademlia::RPCType::StoreReply(flag) => rpc.store_reply(flag, me),
+    	kademlia::RPCType::FindNode(id) => rpc.find(id, true, me),
+    	kademlia::RPCType::FindValue(id) => rpc.find(id, false, me),
+    	kademlia::RPCType::FindReply(ref node)=> rpc.find_reply(node.clone(), me),
+		kademlia::RPCType::Debug => debug(rpc, me),
 		_ => println!("Other recieved")
 	}
 	
 }
 
-fn debug(rpc: kademlia::RPCMessage, node: &Box<nodes::Node>) {
+fn debug(rpc: kademlia::RPCMessage, node: &Box<kademlia::nodes::Node>) {
 	println!("Node {:?} recieved debug to {:?} from {:?}", 
-		<nodes::Node as nodes::NodeTrait>::get_id(node),
+		<kademlia::nodes::Node as kademlia::nodes::NodeTrait>::get_id(node),
 		rpc.callee_id,
 		rpc.caller.ip);
 }
+
 
 
 

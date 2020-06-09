@@ -6,3 +6,4 @@ Cargo.lock
 
 #ignore aws key files
 aws/*.pem
+*.pem

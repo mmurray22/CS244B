@@ -14,7 +14,7 @@
 const ALPHA : u64 = 3;
 
 pub enum RPCType {
-    Ping(nodes::Node),
+    Ping(nodes::ZipNode),
     PingReply(bool),
     Store(u64, u64),
     StoreReply(bool),
@@ -33,13 +33,15 @@ pub struct RPCMessage {
     pub payload: RPCType,
 }
 
+// pub fn lookup(node: nodes::Node, sig: u32, target_id: nodes::ID) -> 
+
 impl RPCMessage {
-    pub fn ping(&self, probe_node: nodes::ZipNode) { 
-        //TODO-just figure out how ping works
+    pub fn ping(&self, probe_node: nodes::ZipNode, current: &Box<nodes::Node>) { 
+        //TODO
     }
-    
-    pub fn store(&self, key: u64, val: u64) { 
-        //TODO-just figure out how it talks directly to one node
+
+    pub fn ping_reply(&self, success: bool, current: &Box<nodes::Node>) {
+        // TODO
     }
     
     pub fn find(&self, id: nodes::ID, is_fnode: bool) {
@@ -65,6 +67,22 @@ impl RPCMessage {
         }
         let next_closest : Vec = send_rpc(/*to all the lookup_nodes*/);
         return lookup(&self, target_id, next_closest);
+    }
+
+    pub fn store(&self, key: u64, val: u64, current: &Box<nodes::Node>) { 
+        //TODO
+    }
+
+    pub fn store_reply(&self, success: bool, current: &Box<nodes::Node>) {
+        //TODO
+    }
+    
+    pub fn find(&self, id: nodes::ID, is_fnode: bool, current: &Box<nodes::Node>) {
+        //TODO
+    }
+
+    pub fn find_reply(&self, reply: nodes::ZipNode, current: &Box<nodes::Node>) {
+        //TODO
     }
 
     pub fn send_rpc(&self, node_from: nodes::ZipNode, node_to: nodes::ID, msg_type: u8) {
