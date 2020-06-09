@@ -114,7 +114,8 @@ fn start_network_node(ip: String, port: u64,
 
 fn handle(me: &Box<kademlia::nodes::Node>, rpc: kademlia::RPCMessage, 
 		network: &Arc<Mutex<HashMap<String,Sender<kademlia::RPCMessage>>>>) {
-	match rpc.payload {
+
+	let (ip,reply) = match rpc.payload {
 		kademlia::RPCType::Ping(ref node) => rpc.ping(node.clone(), me),
     	kademlia::RPCType::PingReply(flag) => rpc.ping_reply(flag, me),
     	kademlia::RPCType::Store(key, val) => rpc.store(key, val, me),
@@ -122,17 +123,42 @@ fn handle(me: &Box<kademlia::nodes::Node>, rpc: kademlia::RPCMessage,
     	kademlia::RPCType::FindNode(id) => rpc.find(id, true, me),
     	kademlia::RPCType::FindValue(id) => rpc.find(id, false, me),
     	kademlia::RPCType::FindReply(ref node)=> rpc.find_reply(node.clone(), me),
-		kademlia::RPCType::Debug => debug(rpc, me),
-		_ => println!("Other recieved")
+		_ => debug(rpc, me),
+	};
+
+	match reply.payload {
+		kademlia::RPCType::Null => {},
+		_ => {
+			match network.lock().unwrap().get(&ip) {
+				Some(node) => {
+					node.send(reply).expect("Failed to send");
+				},
+				None => println!("Can't find node with ip: {:?}", &ip)
+			}
+		}
 	}
-	
 }
 
-fn debug(rpc: kademlia::RPCMessage, node: &Box<kademlia::nodes::Node>) {
-	println!("Node {:?} recieved debug to {:?} from {:?}", 
-		<kademlia::nodes::Node as kademlia::nodes::NodeTrait>::get_id(node),
-		rpc.callee_id,
-		rpc.caller.ip);
+fn debug(rpc: kademlia::RPCMessage, node: &Box<kademlia::nodes::Node>) -> (String,kademlia::RPCMessage) {
+	match rpc.payload {
+		kademlia::RPCType::Debug => {
+			println!("Node {:?} recieved debug to {:?} from {:?}", 
+			<kademlia::nodes::Node as kademlia::nodes::NodeTrait>::get_id(node),
+			rpc.callee_id,
+			rpc.caller.ip);
+		}
+		_ => {}
+	}
+
+	let rpc = kademlia::RPCMessage {
+		caller: kademlia::nodes::ZipNode {
+			id: kademlia::nodes::ID { id: [0; 20]},
+			ip: "".to_string(),
+			port: 0 },
+		callee_id: kademlia::nodes::ID {id: [0; 20]},
+		payload: kademlia::RPCType::Null
+	};
+	return ("".to_string(), rpc);
 }
 
 

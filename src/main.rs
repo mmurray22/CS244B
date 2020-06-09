@@ -17,7 +17,6 @@ mod nodes;
 mod routing;
 mod test_harness;
 mod kademlia;
-mod network_node;
 
 pub const DEFAULT_PORT: u64 = 444;
 
@@ -39,10 +38,10 @@ fn main () -> () {
 
 
 fn bootstrap(mut pre_node: Box<nodes::Node>, base_ip: String, base_id: nodes::ID) {
-    let default_zip = <nodes::ZipNode as nodes::RoutingTable>::new(base_id, base_ip, DEFAULT_PORT);
+    let default_zip = nodes::ZipNode::new(base_id, base_ip, DEFAULT_PORT);
     let pre_node_id : [u8; 20] =  <nodes::Node as nodes::NodeTrait>::get_id(&pre_node); 
     let dist = <nodes::Node as nodes::NodeTrait>::key_distance(base_id, nodes::ID{id: pre_node_id});
-    <nodes::ZipNode as nodes::RoutingTable>::add_entry(&mut pre_node, default_zip, dist);
+    nodes::ZipNode::add_entry(&mut pre_node, default_zip, dist);
 
     //Invoke Self Find_Node RPC
     //find_node();
