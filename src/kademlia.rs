@@ -39,6 +39,7 @@ pub struct RPCMessage {
 impl RPCMessage {
     pub fn ping(&self, probe_node: nodes::ZipNode, current: &Box<nodes::Node>) 
             -> (String,RPCMessage) {
+        // current.add_entry(self.caller);
         
         let reply = RPCMessage {
             caller: nodes::ZipNode {
