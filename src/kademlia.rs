@@ -27,46 +27,44 @@ pub enum RPCType {
 
 // #[derive(Serialize, Deserialize, Debug)]
 pub struct RPCMessage {
-    //TODO: pub token: ,
-    pub caller: nodes::ZipNode,
+    pub rpc_token: nodes::ID,
+    pub caller_node: nodes::ZipNode,
     pub callee_id: nodes::ID,
     pub payload: RPCType,
 }
 
-// <<<<<<< HEAD
 impl RPCMessage {
     pub fn ping(&self, probe_node: nodes::ZipNode) { 
-        //TODO
+        //TODO-just figure out how ping works
     }
     
     pub fn store(&self, key: u64, val: u64) { 
-        //TODO
+        //TODO-just figure out how it talks directly to one node
     }
     
     pub fn find(&self, id: nodes::ID, is_fnode: bool) {
-        //TODO
-// =======
-// pub trait rpcfxns {
-//     fn ping(probe_node: Box<nodes::Node>); 
-//     fn store(key: u64, val: u64); 
-//     fn find(id: nodes::ID, is_fnode: bool);
-//     fn send_RPC(node_from: Box<nodes::Node>, node_to: Box<nodes::Node>, msg_type: u8);
-//     fn read_RPC(ser_msg: String);
-// }
+        let mut closest = Vec::with_capacity(BUCKET_SIZE);
+        if is_fnode {
+            
+        }
+    }
 
-// impl rpcfxns for RPCMessage {
-//     fn ping(probe_node: Box<nodes::Node>) { 
-//         //TODO: probes a node to see if it is online
-//     }
-    
-//     fn store(key: u64, val: u64) { 
-//         //TODO: Instructs a node to store a <key, value> pair for later retrieval
-//     }
-    
-//     fn find(id: nodes::ID, is_fnode: bool) {
-//         //TODO: Find a node, and then either returns the node or the value associated with that
-//         //node
-// >>>>>>> de57393484fe5b0cdd97f1e25efcfb4adf007aeb
+    //! Notes for lookup algoirthm: 
+    pub fn lookup(&self, target_id: nodes::ID, closest: Vec/*can closest be sorted BEFORE we call it?*/) -> Vec{
+        if closest.len() == 0 {
+            return found_node;
+        }
+        if all_find_node_fail {
+            send_msg_to_remaining_k_nodes;
+        }
+        closest.sort_by(|a, b| (xor(b.id, target_id)).cmp(&(xor(a.id, target_id))));
+        let lookup_nodes = Vec::new();
+        for i in 0..ALPHA {
+            lookup_nodes.push_back(closest[0]);
+            closest.pop_front();
+        }
+        let next_closest : Vec = send_rpc(/*to all the lookup_nodes*/);
+        return lookup(&self, target_id, next_closest);
     }
 
     pub fn send_rpc(&self, node_from: nodes::ZipNode, node_to: nodes::ID, msg_type: u8) {

@@ -30,6 +30,10 @@ fn main () -> () {
         let mut test_node : Box<nodes::Node> =  <nodes::Node as nodes::NodeTrait>::new(args[1].clone(), DEFAULT_PORT);
         let base_id : nodes::ID = <nodes::ID>::from_str(&args[3].clone()).unwrap();
         bootstrap(test_node, args[2].clone(), base_id.clone());
+        loop {
+
+            break;
+        }
     }
 }
 
