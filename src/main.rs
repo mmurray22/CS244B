@@ -53,8 +53,11 @@ fn run_test_harness() {
         network.client_add_node(i.to_string(),0);
     }
 
+    // Continually recieved stdin, arg 0 is rpc, arg 1 is source, arg 2 is dest
     while true {
         let mut input = String::new();
+
+        // Generates empty rpc
         let mut rpc = test_harness::kademlia::RPCMessage {
             rpc_token: test_harness::kademlia::nodes::ID {id: [0; 20]},
             caller_node: test_harness::kademlia::nodes::ZipNode {
@@ -65,6 +68,7 @@ fn run_test_harness() {
             payload: test_harness::kademlia::RPCType::Ping
         };
 
+        // parses input and sends rpc
         match io::stdin().read_line(&mut input) {
             Ok(n) => {
                 let mut split = input.split_whitespace();
@@ -81,8 +85,6 @@ fn run_test_harness() {
             }
             Err(error) => println!("error: {}", error),
         }
-
-        // 
     }
     
 }
