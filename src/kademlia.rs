@@ -80,27 +80,17 @@ impl RPCMessage {
         while lookup_nodes.len() < ALPHA {
             lookup_nodes.sort_by(|a, b| (xor(b.id, target_id)).cmp(&(xor(a.id, target_id))));
             for i in 0..self.kbuckets[dist].len() {
+                /*get top three nodes! TODO*/
+                if lookup_nodes.len() == ALPHA {
+                    break;
+                }
+                lookup_nodes.push_back(self.kbuckets[dist][i]);
             }
+            break;
         }
-
-        for i in 0..self.kbuckets[dist] {
-            
-        }
-        let mut queried = HashSet::new(); //Query 
-        if closest.len() == 0 {
-            return found_node;
-        }
-        if all_find_node_fail {
-            send_msg_to_remaining_k_nodes;
-        }
-        closest.sort_by(|a, b| (xor(b.id, target_id)).cmp(&(xor(a.id, target_id))));
-        let lookup_nodes = Vec::new();
-        for i in 0..ALPHA {
-            lookup_nodes.push_back(closest[0]);
-            closest.pop_front();
-        }
-        let next_closest : Vec = send_rpc(/*to all the lookup_nodes*/);
-        return lookup(&self, target_id, next_closest);
+        lookup(lookup_nodes[0]);
+        lookup(lookup_nodes[1]);
+        lookup(lookup_nodes[2]);
     }
 
     pub fn store(&self, key: u64, val: u64, current: &Box<nodes::Node>) 
