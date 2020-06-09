@@ -9,9 +9,10 @@
 //!TODO Questions which need to be answered: Are we little or big endian?
 // use serde::{Serialize, Deserialize};
 // use serde_derive::{Serialize, Deserialize};
+use std::collections::LinkedList;
 #[path = "./nodes.rs"] pub mod nodes;
 
-const ALPHA : u64 = 3;
+const ALPHA : usize = 3;
 
 #[derive(Clone)]
 pub enum RPCType {
@@ -64,11 +65,11 @@ impl RPCMessage {
         let replys = Vec::new();
         return replys;
     }
-/*
+
 	fn find_k_closest_nodes(target_id: nodes::ID, self_id: nodes::ID, kbuckets: Vec<LinkedList<nodes::ZipNode>>) 
 						-> Vec<nodes::ZipNode>{
-		let mut ret_vec = Vec::with_capacity(BUCKET_SIZE);
-		let mut dist = xor(target_id, self_id);
+		let mut ret_vec = Vec::with_capacity(nodes::BUCKET_SIZE);
+		let mut dist = nodes::Node::key_distance(target_id, self_id);
 		while true {
 			if ret_vec.len() < ALPHA && dist != 0 {
 				dist-=1;
@@ -78,7 +79,7 @@ impl RPCMessage {
 			let mut iter = kbuckets[dist].iter();
 			while iter.next() != None {
 				if ret_vec.len() < ALPHA {
-					ret_vec.push_back(iter.next().unwrap());
+					ret_vec.push((iter.next().unwrap()).clone());
 				} else {
 					break;
 				}
@@ -88,29 +89,29 @@ impl RPCMessage {
 		return ret_vec;
 	}
     
-    fn lookup(&self, target_id: nodes::ID) -> Box<nodes::Node> {
+    fn lookup(&self, target_id: nodes::ID, origin_node: nodes::ZipNode, origin_kbuckets: Vec<LinkedList<nodes::ZipNode>>) -> nodes::ZipNode {
         //1. Get all k nodes with IDs closest to the target_id
-        let closest_k : Vec = find_k_closest_nodes(target_id, self.id, &self.kbuckets);
+        let mut closest_k : Vec<nodes::ZipNode> = RPCMessage::find_k_closest_nodes(target_id, origin_node.id, origin_kbuckets.clone());
         //2. Order those k nodes and select the closest ALPHA
-        closest_k.sort_by(|a, b| (xor(b.id, target_id)).cmp(&(xor(a.id, target_id))));
-        let ret = xor(closest_k[0].id, target_id) > xor(self.id, target_id) &&
-				  xor(closest_k[1].id, target_id) > xor(self.id, target_id) &&
-				  xor(closest_k[2].id, target_id) > xor(self.id, target_id);
+        closest_k.sort_by(|a, b| (nodes::Node::key_distance(b.id, target_id)).cmp(&(nodes::Node::key_distance(a.id, target_id))));
+        let ret = nodes::Node::key_distance(closest_k[0].id, target_id) > nodes::Node::key_distance(origin_node.id, target_id) &&
+				  nodes::Node::key_distance(closest_k[1].id, target_id) > nodes::Node::key_distance(origin_node.id, target_id) &&
+				  nodes::Node::key_distance(closest_k[2].id, target_id) > nodes::Node::key_distance(origin_node.id, target_id);
         //2.5 If there is no closest ALPHA, then return!
-        if (ret) {
-            return self;
+        if ret {
+            return origin_node;
         }
-        //3. Recursively lookup nodes in those nodes
-        let node_one = lookup(closest_k[0], target_id);
-        let node_two = lookup(closest_k[1], target_id);
-		let node_three = lookup(closest_k[2], target_id);
+        //3. Recursively lookup nodes in those nodes TODO: Need to change to RPC calls!
+        let node_one = RPCMessage::lookup(self, target_id, closest_k[0].clone(), origin_kbuckets.clone());
+        let node_two = RPCMessage::lookup(self, target_id, closest_k[1].clone(), origin_kbuckets.clone());
+		let node_three = RPCMessage::lookup(self, target_id, closest_k[2].clone(), origin_kbuckets.clone());
         //4. OPTIONAL? -> Once this recursive lookup is done on the alpha, investigate the other k-ALPHA
         //5. Once that is done, return the selected node.
-		let node_cmp = xor(node_one.id, target_id) < xor(node_two.id, target_id) ? node_one; node_two;
-		let node_final = xor(node_cmp.id, target_id) < xor(node_three.id, target_id) ? node_cmp; node_three;
+		let node_cmp = if nodes::Node::key_distance(node_one.id, target_id) < nodes::Node::key_distance(node_two.id, target_id) {node_one} else {node_two};
+		let node_final = if nodes::Node::key_distance(node_cmp.id, target_id) < nodes::Node::key_distance(node_three.id, target_id) {node_cmp} else {node_three};
 		return node_final;
     }
-*/
+
     fn store(&self, current: &mut Box<nodes::Node>) 
             -> Vec<(String,RPCMessage)> { 
 

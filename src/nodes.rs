@@ -19,7 +19,7 @@ pub const sig: usize = 1;
 //const DEFAULT_NODES
 
 #[allow(dead_code)]
-struct Pair {
+pub struct Pair {
     key: u64,
     value: u64
 }
@@ -30,11 +30,11 @@ pub struct ID{
 }
 
 pub struct Node {
-    id: ID,
-    ip: String,
-    port: u64,
-    storage: Vec<Pair>,
-    kbuckets: Vec<LinkedList<ZipNode>>,
+    pub id: ID,
+    pub ip: String,
+    pub port: u64,
+    pub storage: Vec<Pair>,
+    pub kbuckets: Vec<LinkedList<ZipNode>>,
 }
 
 #[derive(Clone)]

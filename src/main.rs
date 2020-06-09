@@ -16,8 +16,8 @@ use std::io::{self, Read};
 
 mod nodes;
 mod routing;
-mod test_harness;
 mod kademlia;
+mod test_harness;
 
 pub const DEFAULT_PORT: u64 = 444;
 
@@ -71,7 +71,7 @@ fn run_test_harness() {
         // parses input and sends rpc
         match io::stdin().read_line(&mut input) {
             Ok(n) => {
-                let mut split = input.split_whitespace();
+                let split = input.split_whitespace();
                 let args = split.collect::<Vec<&str>>();
                 match args[0] {
                     "ping" => {
