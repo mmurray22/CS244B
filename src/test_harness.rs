@@ -93,8 +93,12 @@ fn start_network_node(ip: String, port: u64,
 
 	// Thread continuously waits on its RPC queue until it receives kill msg
 	let thread = thread::spawn(move || {
+
+		// Inits threads node, and routing table.
 		let me = Box::new(kademlia::nodes::Node::new(ip, port));
 		let net = network;
+		let mut r_table = Box::new(HashMap::new());
+
 		loop {
 			let rpc = rx.recv().expect("Error in receiving RPC");
 			match rpc.payload {
@@ -103,7 +107,7 @@ fn start_network_node(ip: String, port: u64,
 						kademlia::nodes::Node::get_ip(&me));
 					break;
 				},
-				_ => handle(&me,rpc,&net)
+				_ => handle(&me, rpc, &net, &mut r_table)
 			}
 		}
 	});
@@ -113,9 +117,10 @@ fn start_network_node(ip: String, port: u64,
 
 
 fn handle(me: &Box<kademlia::nodes::Node>, rpc: kademlia::RPCMessage, 
-		network: &Arc<Mutex<HashMap<String,Sender<kademlia::RPCMessage>>>>) {
+		network: &Arc<Mutex<HashMap<String,Sender<kademlia::RPCMessage>>>>,
+		r_table: &mut Box<HashMap<String,Sender<kademlia::RPCMessage>>>) {
 
-	let (ip,reply) = match rpc.payload {
+	let replys = match rpc.payload {
 		kademlia::RPCType::Ping(ref node) => rpc.ping(node.clone(), me),
     	kademlia::RPCType::PingReply(flag) => rpc.ping_reply(flag, me),
     	kademlia::RPCType::Store(key, val) => rpc.store(key, val, me),
@@ -126,20 +131,32 @@ fn handle(me: &Box<kademlia::nodes::Node>, rpc: kademlia::RPCMessage,
 		_ => debug(rpc, me),
 	};
 
-	match reply.payload {
-		kademlia::RPCType::Null => {},
-		_ => {
-			match network.lock().unwrap().get(&ip) {
-				Some(node) => {
-					node.send(reply).expect("Failed to send");
-				},
-				None => println!("Can't find node with ip: {:?}", &ip)
+	// Sends all replys asyncronously
+	for (ip,reply) in replys {
+		match reply.payload {
+			kademlia::RPCType::Null => {},
+			_ => {
+				match r_table.get(&ip) {
+					Some(tx) => {
+						tx.send(reply).expect("Failed to send");
+					},
+					None => {
+						match network.lock().unwrap().get(&ip) {
+							Some(tx) => {
+								r_table.insert(ip.clone(), tx.clone());
+								tx.send(reply).expect("Failed to send");
+							},
+							None => println!("Can't find node with ip: {:?}", &ip)
+						}
+					}
+				}
+				
 			}
 		}
 	}
 }
 
-fn debug(rpc: kademlia::RPCMessage, node: &Box<kademlia::nodes::Node>) -> (String,kademlia::RPCMessage) {
+fn debug(rpc: kademlia::RPCMessage, node: &Box<kademlia::nodes::Node>) -> Vec<(String,kademlia::RPCMessage)> {
 	match rpc.payload {
 		kademlia::RPCType::Debug => {
 			println!("Node {:?} recieved debug to {:?} from {:?}", 
@@ -149,16 +166,8 @@ fn debug(rpc: kademlia::RPCMessage, node: &Box<kademlia::nodes::Node>) -> (Strin
 		}
 		_ => {}
 	}
-
-	let rpc = kademlia::RPCMessage {
-		caller: kademlia::nodes::ZipNode {
-			id: kademlia::nodes::ID { id: [0; 20]},
-			ip: "".to_string(),
-			port: 0 },
-		callee_id: kademlia::nodes::ID {id: [0; 20]},
-		payload: kademlia::RPCType::Null
-	};
-	return ("".to_string(), rpc);
+	let replys = Vec::new();
+	return replys;
 }
 
 
