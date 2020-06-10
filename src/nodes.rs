@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use crypto::digest::Digest;
 use crypto::sha1::Sha1;
-//use std::collections::LinkedList;
+use std::collections::HashMap;
 
 pub const BUCKET_SIZE: usize = 20; //Maximum length of kbuckets
 const BIT_SLICES: usize = 20; //8*20 = 160 bits
@@ -14,8 +14,6 @@ const DISTANCE_POINTS: usize = 160; //160 distance points
 
 pub const K: usize = 2;
 pub const SIG: usize = 1;
-
-//const DEFAULT_NODES
 
 #[allow(dead_code)]
 pub struct Pair {
@@ -29,12 +27,13 @@ pub struct ID{
 }
 
 pub struct Node {
-    id: ID,
-    key: u64,
-    ip: String,
-    port: u64,
-    storage: Vec<Pair>,
-    kbuckets: Vec<LinkedList<ZipNode>>,
+    pub id: ID,
+    pub key: u64,
+    pub ip: String,
+    pub port: u64,
+    pub storage: Vec<Pair>,
+    pub kbuckets: Vec<LinkedList<ZipNode>>,
+    pub lookup_ids: HashMap<u64, Vec<ID>>,
 }
 
 #[derive(Clone)]
@@ -42,7 +41,6 @@ pub struct ZipNode {
     pub id: ID,
     pub ip: String,
     pub port: u64,
-    pub kbuckets: Vec<LinkedList<ZipNode>>,
 }
 
 trait IDTrait {
@@ -52,11 +50,11 @@ trait IDTrait {
     fn get_random_node_id () -> ID;
 }
 
-impl IDTrait for ID {
+impl ID {
     fn get_id(self) -> ID {
         ID{id: self.id}  
     }
-    fn get_key_hash(key: u64) -> [u8; BIT_SLICES]{
+    pub fn get_key_hash(key: u64) -> [u8; BIT_SLICES]{
         let mut hasher = Sha1::new();
         let mut array = [0; BIT_SLICES];
         hasher.input(&key.to_ne_bytes());
@@ -64,7 +62,7 @@ impl IDTrait for ID {
         array
     }
 
-    fn xor(id1: ID, id2: ID) -> usize {
+    pub fn xor(id1: ID, id2: ID) -> usize {
        let mut temp_id = [0; BIT_SLICES];
        let mut length_of_prefix : usize = 0;
        for i in 0..BIT_SLICES {
@@ -77,7 +75,7 @@ impl IDTrait for ID {
        length_of_prefix
     }
 
-    fn get_random_node_id() -> ID {
+    pub fn get_random_node_id() -> ID {
         let array: [u8; BIT_SLICES] = rand::random();
         ID{id: array}
     }
@@ -107,6 +105,7 @@ impl Node {
             port: port,
             storage: Vec::new(),
             kbuckets: Vec::with_capacity(DISTANCE_POINTS),
+            lookup_ids: HashMap::<u64, Vec<ID>>::new(),
         });
         node.kbuckets = vec![LinkedList::new(); DISTANCE_POINTS];
         //TODO: Populate kbuckets with default nodes!
@@ -169,7 +168,6 @@ impl ZipNode {
             id: node.id.clone(),
             ip: node.ip.clone(),
             port: node.port.clone(),
-            kbuckets: node.kbuckets.clone(),
         };
         default_zip
     }

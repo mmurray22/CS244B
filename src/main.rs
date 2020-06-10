@@ -60,15 +60,12 @@ fn run_test_harness() {
         // Generates empty rpc
         let mut rpc = test_harness::kademlia::RPCMessage {
             rpc_token: test_harness::kademlia::nodes::ID {id: [0; 20]},
-            lookup_key: 0,
             caller_node: test_harness::kademlia::nodes::ZipNode {
                 id: test_harness::kademlia::nodes::ID { id: [0; 20]},
                 ip: "1".to_string(),
-                port: 0,
-                kbuckets: Vec::<LinkedList<test_harness::kademlia::nodes::ZipNode>>::new()},
+                port: 0,},
             callee_id: test_harness::kademlia::nodes::ID {id: [0; 20]},
             payload: test_harness::kademlia::RPCType::Ping,
-            lookup_id: Vec::<test_harness::kademlia::nodes::ZipNode>::new(),
         };
 
         // parses input and sends rpc
