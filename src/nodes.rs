@@ -7,15 +7,13 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::iter::FromIterator;
 
-pub const BUCKET_SIZE: usize = 20; //Maximum length of kbuckets
+pub const K_SIZE: usize = 10; //Maximum length of kbuckets
 const BIT_SLICES: usize = 20; //8*20 = 160 bits
 const ALPHA : usize = 3;
 
 #[allow(dead_code)]
 const DISTANCE_POINTS: usize = 160; //160 distance points
 
-pub const K: usize = 2;
-pub const SIG: usize = 1;
 
 #[allow(dead_code)]
 pub struct Pair {
@@ -166,20 +164,20 @@ impl Node {
         ZipNode::add_entry(primary_node, small_node)
     }
 
-    pub fn find_closest_k(&mut self, target_id: u64) -> Vec<ZipNode>{
-        let mut ret_vec = Vec::with_capacity(BUCKET_SIZE);
+    pub fn find_closest(&mut self, target_id: u64, max_size: usize) -> Vec<ZipNode>{
+        let mut ret_vec = Vec::with_capacity(K_SIZE);
         let mut dist = Node::key_distance(self.id, ID{id: ID::get_key_hash(target_id)});
         /*for elem in &self.kbuckets {
             println!("SIZE OF LINKED LIST: {:?}", (*elem).len());
         }*/
         loop {
             //println!("DIST: {:?}, ALPHA: {:?}, LEN: {:?}", dist, ALPHA, ret_vec.len());
-            if ret_vec.len() == ALPHA {
+            if ret_vec.len() == max_size {
                 break;
             }
             //println!("DIST: {:?}", dist);
             for elem in self.kbuckets[dist].iter_mut() {
-                if ret_vec.len() < ALPHA {
+                if ret_vec.len() < max_size {
                     ret_vec.push(elem.clone());
                 } else {
                     break;
@@ -197,7 +195,7 @@ impl Node {
     // Takes in target_id, and possibly a value to later store if store is true
     // Returns a vector of zipnodes to send to, and a lookup key
     pub fn lookup_init(&mut self, target_id: u64, val: u64, store: bool) -> (Vec<ZipNode>, u64) {
-        let zips = self.find_closest_k(target_id);
+        let zips = self.find_closest(target_id, ALPHA);
         // println!("ORIGINAL SIZE: {:?}", zips.len());
         let lookup_key = self.lookup_counter;
         if store {
@@ -273,7 +271,7 @@ impl ZipNode {
     
     pub fn check_zipnode (main_node: &mut std::boxed::Box<Node>, zip_node: ZipNode, i: usize) -> bool {
         //1. Check if there is room to add a ZipNode
-        if main_node.kbuckets[i].len() == BUCKET_SIZE {
+        if main_node.kbuckets[i].len() == K_SIZE {
             /*Just check if oldest of 20 nodes is dead*/
             if /*TODO check_node(main_node.kbuckets[i].back().unwrap().clone())*/ true {
                 return false;

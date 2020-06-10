@@ -108,14 +108,14 @@ impl RPCMessage {
                         replys.push((self.caller_node.ip.clone(),rpc));
                     },
                     None => {
-                        let k_closest = current.find_closest_k(target_key);
+                        let k_closest = current.find_closest(target_key, nodes::K_SIZE);
                         let rpc = RPCMessage::create_new_rpc((*current).clone(), RPCType::FindReply(target_key, k_closest, lookup_key));
                         replys.push((self.caller_node.ip.clone(), rpc));
                     }
                 }
             },
             RPCType::FindNode(target_key, lookup_key) => {
-                let k_closest = current.find_closest_k(target_key);
+                let k_closest = current.find_closest(target_key, nodes::K_SIZE);
                 let rpc = RPCMessage::create_new_rpc((*current).clone(), RPCType::FindReply(target_key, k_closest, lookup_key));
                 replys.push((self.caller_node.ip.clone(), rpc));
             },
@@ -141,7 +141,7 @@ impl RPCMessage {
 
                 if done_flag {
                     if val_flag {
-                        let stores = current.find_closest_k(target_key);
+                        let stores = current.find_closest(target_key, nodes::K_SIZE);
                         for zip in stores {
                             let rpc = RPCMessage::create_new_rpc((*current).clone(), RPCType::Store(target_key, val));
                             replys.push((zip.ip.clone(),rpc));

@@ -37,7 +37,7 @@ fn main () -> () {
 }*/
 
 fn run_test_harness() {
-    let mut num_nodes = 10;
+    let mut num_nodes = 100;
 
     // Creates network and adds nodes
     let mut network = test_harness::Network::new();
