@@ -141,7 +141,8 @@ impl RPCMessage {
 
                 if done_flag {
                     if val_flag {
-                        for zip in zips {
+                        let stores = current.find_closest_k(target_key);
+                        for zip in stores {
                             let rpc = RPCMessage::create_new_rpc((*current).clone(), RPCType::Store(target_key, val));
                             replys.push((zip.ip.clone(),rpc));
                             current.lookup_end(lookup_key);
@@ -195,11 +196,11 @@ impl RPCMessage {
         match self.payload {
             RPCType::ClientStore(key,val) => {
                 let (zips,lookup_key) = current.lookup_init(key,val,true);
-                println!("IMMEDIATE SIZE: {:?}", zips.len());
+                // println!("IMMEDIATE SIZE: {:?}", zips.len());
                 for zip in zips {
                     let rpc = RPCMessage::create_new_rpc((*current).clone(), RPCType::FindNode(key, lookup_key));
                     replys.push((zip.ip.clone(), rpc));
-                    println!("SIZE INSIDE: {:?}", replys.len());
+                    // println!("SIZE INSIDE: {:?}", replys.len());
                 }
             },
             _ => println!("IMPOSSIBLE")

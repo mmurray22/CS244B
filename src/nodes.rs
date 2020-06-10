@@ -190,7 +190,7 @@ impl Node {
             }
             dist-=1;
         }
-        println!("SIZE: {:?}", ret_vec.len());
+        // println!("SIZE: {:?}", ret_vec.len());
         return ret_vec;
     }
 
@@ -198,7 +198,7 @@ impl Node {
     // Returns a vector of zipnodes to send to, and a lookup key
     pub fn lookup_init(&mut self, target_id: u64, val: u64, store: bool) -> (Vec<ZipNode>, u64) {
         let zips = self.find_closest_k(target_id);
-        println!("ORIGINAL SIZE: {:?}", zips.len());
+        // println!("ORIGINAL SIZE: {:?}", zips.len());
         let lookup_key = self.lookup_counter;
         if store {
             self.lookup_map.insert(lookup_key, (Some(val), HashSet::from_iter(zips.iter().cloned()), HashSet::new()));
