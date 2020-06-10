@@ -221,7 +221,11 @@ impl Node {
                     for zip in k_closest {
                         if !rec.contains(&zip) && !sent.contains(&zip) {
                             sent.insert(zip.clone());
-                            new_zips.push(zip.clone())
+                            new_zips.push(zip.clone());
+                            // Return at most only ALPHA requests
+                            if new_zips.len() == ALPHA {
+                                break;
+                            }
                         }
                     }
                     sent.remove(&rec_zip);
