@@ -182,6 +182,7 @@ impl Node {
                 }
             }
         }
+        println!("SIZE: {:?}", ret_vec.len());
         return ret_vec;
     }
 
