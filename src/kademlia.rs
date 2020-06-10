@@ -20,8 +20,8 @@ pub enum RPCType {
     PingReply,
     Store(u64, u64),
     StoreReply,
-    FindNode(nodes::ID),
-    FindValue(nodes::ID),
+    FindNode(u64),
+    FindValue(u64),
     FindReply(Vec<nodes::ZipNode>),
     ClientStore(u64,u64),
     ClientGet(u64),
@@ -44,84 +44,61 @@ pub struct RPCMessage {
 // Handler functions for all RPCs
 impl RPCMessage {
     /*Find ALPHA closest nodes*/
-    //pub fn lookup_init(key: ID) -> Vec<ZipNode> /*ALPHA Nodes*/
-    pub fn lookup_init(&mut self, target_id: nodes::ID)
-                        -> Vec<nodes::ZipNode> {
-        //1. Get all k nodes with IDs closest to the target_id 
-        let mut ret_vec = Vec::with_capacity(nodes::BUCKET_SIZE);
-        let mut dist = nodes::Node::key_distance(target_id, self.caller_node.id);
-        loop {
-            if ret_vec.len() < ALPHA && dist != 0 {
-                dist-=1;
-            } else {
-                break;
-            }
-            let mut iter = self.caller_node.kbuckets[dist].iter();
-            while iter.next() != None {
-                if ret_vec.len() < ALPHA {
-                    ret_vec.push((iter.next().unwrap()).clone());
-                } else {
-                    break;
-                }
-            }
-        }
-        self.lookup_key = ret_vec.len();
-        self.lookup_id = ret_vec.clone();
-        return ret_vec;
+    // pub fn lookup_init(&mut self, target_id: nodes::ID)
+    //                     -> Vec<nodes::ZipNode> {
+    //     //1. Get all k nodes with IDs closest to the target_id 
+    //     let mut ret_vec = Vec::with_capacity(nodes::BUCKET_SIZE);
+    //     let mut dist = nodes::Node::key_distance(target_id, self.caller_node.id);
+    //     loop {
+    //         if ret_vec.len() < ALPHA && dist != 0 {
+    //             dist-=1;
+    //         } else {
+    //             break;
+    //         }
+    //         let mut iter = self.caller_node.kbuckets[dist].iter();
+    //         while iter.next() != None {
+    //             if ret_vec.len() < ALPHA {
+    //                 ret_vec.push((iter.next().unwrap()).clone());
+    //             } else {
+    //                 break;
+    //             }
+    //         }
+    //     }
+    //     self.lookup_key = ret_vec.len();
+    //     self.lookup_id = ret_vec.clone();
+    //     return ret_vec;
+    // }
+
+    // pub fn lookup_update(&mut self, target_id: nodes::ID, _zip_node : nodes::ZipNode) -> Vec<nodes::ZipNode> {
+    //     //2. Order those k nodes and select the closest ALPHA
+    //     self.lookup_key -= 1;
+    //     self.lookup_init(target_id)
+    // }
+
+    fn lookup_init(&self, target_id: u64, current: &mut Box<nodes::Node>) -> (Vec<nodes::ZipNode>, u64) {
+        return (Vec::new(),0);
     }
 
-    pub fn lookup_update(&mut self, target_id: nodes::ID, _zip_node : nodes::ZipNode) -> Vec<nodes::ZipNode> {
-        //2. Order those k nodes and select the closest ALPHA
-        self.lookup_key -= 1;
-        self.lookup_init(target_id)
+
+    fn lookup_update(&self, target_id: u64, current: &mut Box<nodes::Node>) -> Vec<nodes::ZipNode> {
+        return Vec::new();
     }
 
-    fn find_k_closest_nodes(target_id: nodes::ID, self_id: nodes::ID, kbuckets: Vec<LinkedList<nodes::ZipNode>>) 
-                        -> Vec<nodes::ZipNode>{
-        let mut ret_vec = Vec::with_capacity(nodes::BUCKET_SIZE);
-        let mut dist = nodes::Node::key_distance(target_id, self_id);
-        loop {
-            if ret_vec.len() < ALPHA && dist != 0 {
-                dist-=1;
-            } else {
-                break;
-            }
-            let mut iter = kbuckets[dist].iter();
-            while iter.next() != None {
-                if ret_vec.len() < ALPHA {
-                    ret_vec.push((iter.next().unwrap()).clone());
-                } else {
-                    break;
-                }
-            }
-            
-        }
-        return ret_vec;
-    }
-    
-    fn lookup(&self, target_id: nodes::ID, origin_node: nodes::ZipNode, origin_kbuckets: Vec<LinkedList<nodes::ZipNode>>) -> nodes::ZipNode {
-        //1. Get all k nodes with IDs closest to the target_id
-        let mut closest_k : Vec<nodes::ZipNode> = RPCMessage::find_k_closest_nodes(target_id, origin_node.id, origin_kbuckets.clone());
-        //2. Order those k nodes and select the closest ALPHA
-        closest_k.sort_by(|a, b| (nodes::Node::key_distance(b.id, target_id)).cmp(&(nodes::Node::key_distance(a.id, target_id))));
-        let ret = nodes::Node::key_distance(closest_k[0].id, target_id) > nodes::Node::key_distance(origin_node.id, target_id) &&
-                  nodes::Node::key_distance(closest_k[1].id, target_id) > nodes::Node::key_distance(origin_node.id, target_id) &&
-                  nodes::Node::key_distance(closest_k[2].id, target_id) > nodes::Node::key_distance(origin_node.id, target_id);
-        //2.5 If there is no closest ALPHA, then return!
-        if ret {
-            return origin_node;
-        }
-        //3. Recursively lookup nodes in those nodes TODO: Need to change to RPC calls!
-        let node_one = RPCMessage::lookup(self, target_id, closest_k[0].clone(), origin_kbuckets.clone());
-        let node_two = RPCMessage::lookup(self, target_id, closest_k[1].clone(), origin_kbuckets.clone());
-        let node_three = RPCMessage::lookup(self, target_id, closest_k[2].clone(), origin_kbuckets.clone());
-        //4. OPTIONAL? -> Once this recursive lookup is done on the alpha, investigate the other k-ALPHA
-        //5. Once that is done, return the selected node.
-        let node_cmp = if nodes::Node::key_distance(node_one.id, target_id) < nodes::Node::key_distance(node_two.id, target_id) {node_one} else {node_two};
-        let node_final = if nodes::Node::key_distance(node_cmp.id, target_id) < nodes::Node::key_distance(node_three.id, target_id) {node_cmp} else {node_three};
-        return node_final;
+
+    fn lookup_end(&self) {
+
     }
 
+    fn create_rpc(&self, current: &mut Box<nodes::Node>, payload:RPCType) -> RPCMessage {
+        RPCMessage {
+            rpc_token: nodes::ID {id: [0; 20]},
+            lookup_key: 0,
+            caller_node: nodes::ZipNode::new(&current),
+            callee_id: self.caller_node.id,
+            payload,
+            lookup_id: Vec::<nodes::ZipNode>::new(),
+        }
+    }
 
     fn ping(&self, current: &mut Box<nodes::Node>) 
             -> Vec<(String,RPCMessage)> {
@@ -157,18 +134,13 @@ impl RPCMessage {
 
         let mut replys = Vec::new();
 
+        // Store value
         match self.payload {
             RPCType::Store(key,val) => {
-                if current.store_value(key,val) {
-                    replys.push((self.caller_node.ip.clone(), RPCMessage {
-                        rpc_token: nodes::ID {id: [0; 20]},
-                        lookup_key: 0,
-                        caller_node: nodes::ZipNode::new(&current),
-                        callee_id: self.caller_node.id,
-                        payload: RPCType::StoreReply,
-                    	lookup_id: Vec::<nodes::ZipNode>::new(),
-					}));
-                }
+                current.storage.insert(key,val);
+                let rpc = self.create_rpc(current, RPCType::StoreReply);
+
+                replys.push((self.caller_node.ip.clone(),rpc));
             },
             _ => println!("Store Failed")
         }
@@ -184,13 +156,29 @@ impl RPCMessage {
         return replys;
     }
     
-    pub fn find(&self, is_fnode: bool, current: &mut Box<nodes::Node>) 
+    pub fn find(&self, current: &mut Box<nodes::Node>) 
             -> Vec<(String,RPCMessage)> {
 
         // TODO 
         // send FindReplys for closest k nodes in current.k_buckets
         // let replys = lookup();
 
+        match self.payload {
+            RPCType::FindValue(key) => {
+                match current.storage.get(&key) {
+                    Some(val) => {
+
+                    },
+                    None => {
+
+                    }
+                }
+            },
+            RPCType::FindNode(key) => {
+
+            },
+            _ => {}
+        }
         let replys = Vec::new();
         // replys.push()
         return replys;
@@ -253,8 +241,8 @@ impl RPCMessage {
             RPCType::PingReply => self.ping_reply(current),
             RPCType::Store(key, val) => self.store(current),
             RPCType::StoreReply => self.store_reply(current),
-            RPCType::FindNode(id) => self.find(true, current),
-            RPCType::FindValue(id) => self.find(false, current),
+            RPCType::FindNode(id) => self.find(current),
+            RPCType::FindValue(id) => self.find(current),
             RPCType::FindReply(node) => self.find_reply(current),
             RPCType::Value(val) => self.value(current),
             RPCType::ClientStore(key,val) => self.client_store(current),

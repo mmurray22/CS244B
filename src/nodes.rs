@@ -3,6 +3,7 @@ use std::str::FromStr;
 
 use crypto::digest::Digest;
 use crypto::sha1::Sha1;
+use std::collections::HashMap;
 //use std::collections::LinkedList;
 
 pub const BUCKET_SIZE: usize = 20; //Maximum length of kbuckets
@@ -33,7 +34,8 @@ pub struct Node {
     key: u64,
     ip: String,
     port: u64,
-    storage: Vec<Pair>,
+    lookup_map: HashMap<u64,Vec<ID>>,
+    pub storage: HashMap<u64,u64>,
     kbuckets: Vec<LinkedList<ZipNode>>,
 }
 
@@ -105,7 +107,8 @@ impl Node {
             key,
             ip: ip,
             port: port,
-            storage: Vec::new(),
+            storage: HashMap::new(),
+            lookup_map: HashMap::new(),
             kbuckets: Vec::with_capacity(DISTANCE_POINTS),
         });
         node.kbuckets = vec![LinkedList::new(); DISTANCE_POINTS];
@@ -121,11 +124,11 @@ impl Node {
         self.port
     }
 
-    pub fn get_id (&self) -> ID { // [u8; BIT_SLICES] {
+    pub fn get_id (&self) -> ID { 
         self.id
     }
 
-    pub fn get_key (&self) -> u64 { // [u8; BIT_SLICES] {
+    pub fn get_key (&self) -> u64 { 
         self.key
     }
 
@@ -150,11 +153,7 @@ impl Node {
         ZipNode::add_entry(primary_node, small_node)
     }
 
-    pub fn store_value (&mut self, key: u64, val: u64) -> bool {
-        let pair = Pair{key: key, value: val};
-        self.storage.push(pair);  
-        true
-    }
+
 }
 
 impl PartialEq for ZipNode {
