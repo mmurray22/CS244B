@@ -1,5 +1,5 @@
 /*For communicating over threads*/
-
+use std::collections::LinkedList;
 use std::collections::HashMap;
 use std::thread;
 use std::sync::{Arc, Mutex, mpsc::*};
@@ -47,8 +47,9 @@ impl Network {
 						lookup_key: 0,
 						caller_node: ozip.clone(),
 						callee_id: kademlia::nodes::ID {id: [0; 20]},
-						payload: kademlia::RPCType::ClientGet(key)
-					};
+						payload: kademlia::RPCType::ClientGet(key),
+					    lookup_id: Vec::<kademlia::nodes::ZipNode>::new(),
+                    };
 
 					tx.send(add).expect("Failed to join network");
 					break;
@@ -65,12 +66,14 @@ impl Network {
 		let kill = kademlia::RPCMessage {
 			rpc_token: kademlia::nodes::ID {id: [0; 20]},
 			lookup_key: 0,
-            caller_node: kademlia::nodes::ZipNode {
+            caller_node: kademlia::nodes::ZipNode{
 				id: kademlia::nodes::ID { id: [0; 20]},
 				ip: "".to_string(),
-				port: 0 },
+				port: 0,
+                kbuckets: Vec::<LinkedList<kademlia::nodes::ZipNode>>::new()},
 			callee_id: kademlia::nodes::ID {id: [0; 20]},
-			payload: kademlia::RPCType::KillNode
+			payload: kademlia::RPCType::KillNode,
+            lookup_id: Vec::<kademlia::nodes::ZipNode>::new(),
 		};
 		self.send_rpc(ip.clone(),kill);
 		self.net_map.lock().unwrap().remove(&ip);
@@ -101,10 +104,12 @@ impl Drop for Network {
                 caller_node: kademlia::nodes::ZipNode {
 					id: kademlia::nodes::ID { id: [0; 20]},
 					ip: "".to_string(),
-					port: 0 },
+					port: 0,
+                    kbuckets: Vec::<LinkedList<kademlia::nodes::ZipNode>>::new()},
 				callee_id: kademlia::nodes::ID {id: [0; 20]},
-				payload: kademlia::RPCType::KillNode
-			};
+				payload: kademlia::RPCType::KillNode,
+			    lookup_id: Vec::<kademlia::nodes::ZipNode>::new(),
+            };
 
 			node.send(kill).expect("Failed to kill thread");
 		}
@@ -127,7 +132,7 @@ fn start_network_node(ip: String, port: u64,
 	let (tx, rx) = channel::<kademlia::RPCMessage>();
 	let node = Box::new(kademlia::nodes::Node::new(ip, port));
 	let key = node.get_key();
-	let zip = kademlia::nodes::ZipNode::new(node.get_id(),node.get_ip(), node.get_port());
+	let zip = kademlia::nodes::ZipNode::new(&node);
 
 	// Thread continuously waits on its RPC queue until it receives kill msg
 	let thread = thread::spawn(move || {

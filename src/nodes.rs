@@ -42,6 +42,7 @@ pub struct ZipNode {
     pub id: ID,
     pub ip: String,
     pub port: u64,
+    pub kbuckets: Vec<LinkedList<ZipNode>>,
 }
 
 trait IDTrait {
@@ -145,11 +146,7 @@ impl Node {
     }
 
     pub fn update_k_bucket (primary_node: &mut Box<Node>, additional_node: &Box<Node>) -> bool {
-        let small_node = ZipNode{
-                                  id: additional_node.id, 
-                                  ip: additional_node.ip.clone(), 
-                                  port: additional_node.port,
-                        };
+        let small_node : ZipNode =  ZipNode::new(additional_node);
         ZipNode::add_entry(primary_node, small_node)
     }
 
@@ -167,11 +164,12 @@ impl PartialEq for ZipNode {
 }
 
 impl ZipNode {
-    pub fn new(base_id: ID, base_ip: String, base_port: u64) -> ZipNode {
+    pub fn new(node: &Box<Node>) -> ZipNode {
         let default_zip = ZipNode{
-            id: base_id,
-            ip: base_ip,
-            port: base_port,
+            id: node.id.clone(),
+            ip: node.ip.clone(),
+            port: node.port.clone(),
+            kbuckets: node.kbuckets.clone(),
         };
         default_zip
     }
@@ -227,8 +225,8 @@ impl ZipNode {
 
     /*Find ALPHA closest nodes*/
     //pub fn lookup_init(key: ID) -> Vec<ZipNode> /*ALPHA Nodes*/
-    pub fn lookup_init(target_id: ID, self_id: ID, kbuckets: Vec<LinkedList<ZipNode>>)
-                        -> Vec<ZipNode>{
+    /*pub fn lookup_init(target_id: ID, self_id: ID, kbuckets: Vec<LinkedList<ZipNode>>)
+                        -> Vec<ZipNode> {
         //1. Get all k nodes with IDs closest to the target_id 
         let mut ret_vec = Vec::with_capacity(BUCKET_SIZE);
         let mut dist = Node::key_distance(target_id, self_id);
@@ -246,7 +244,6 @@ impl ZipNode {
                     break;
                 }
             }
-
         }
         return ret_vec;
     }
@@ -274,5 +271,5 @@ impl ZipNode {
 
     pub fn lookup_end(key: ID) -> () {
     
-    }
+    }*/
 }

@@ -11,6 +11,7 @@ extern crate serde_derive;
 use std::env;
 use std::str::FromStr;
 use std::io::{self};
+use std::collections::LinkedList;
 
 mod nodes;
 mod routing;
@@ -24,14 +25,15 @@ fn main () -> () {
     if args.len() < 3 {
         println!("Running test harness");
         run_test_harness();
-    } else {
+    } 
+    /*else {
         let test_node : Box<nodes::Node> =  nodes::Node::new(args[1].clone(), DEFAULT_PORT);
         let base_id : nodes::ID = <nodes::ID>::from_str(&args[3].clone()).unwrap();
         bootstrap(test_node, args[2].clone(), base_id.clone());
-    }
+    }*/
 }
 
-fn bootstrap(mut pre_node: Box<nodes::Node>, base_ip: String, base_id: nodes::ID) {
+/*fn bootstrap(mut pre_node: Box<nodes::Node>, base_ip: String, base_id: nodes::ID) {
     let default_zip = nodes::ZipNode::new(base_id, base_ip, DEFAULT_PORT);
     let pre_node_id = pre_node.get_id(); //nodes::Node::get_id(&pre_node); 
     let dist = nodes::Node::key_distance(base_id, pre_node_id);
@@ -39,7 +41,7 @@ fn bootstrap(mut pre_node: Box<nodes::Node>, base_ip: String, base_id: nodes::ID
 
     //Invoke Self Find_Node RPC
     //kademlia::RPCMessage::find(true, &pre_node);
-}
+}*/
 
 fn run_test_harness() {
     let mut num_nodes = 10;
@@ -62,9 +64,11 @@ fn run_test_harness() {
             caller_node: test_harness::kademlia::nodes::ZipNode {
                 id: test_harness::kademlia::nodes::ID { id: [0; 20]},
                 ip: "1".to_string(),
-                port: 0 },
+                port: 0,
+                kbuckets: Vec::<LinkedList<test_harness::kademlia::nodes::ZipNode>>::new()},
             callee_id: test_harness::kademlia::nodes::ID {id: [0; 20]},
-            payload: test_harness::kademlia::RPCType::Ping
+            payload: test_harness::kademlia::RPCType::Ping,
+            lookup_id: Vec::<test_harness::kademlia::nodes::ZipNode>::new(),
         };
 
         // parses input and sends rpc
