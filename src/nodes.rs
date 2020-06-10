@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::iter::FromIterator;
 
-pub const K_SIZE: usize = 10; //Maximum length of kbuckets
+pub const K_SIZE: usize = 20; //Maximum length of kbuckets
 const BIT_SLICES: usize = 20; //8*20 = 160 bits
 const ALPHA : usize = 3;
 

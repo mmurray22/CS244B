@@ -162,11 +162,11 @@ fn handle(current: &mut Box<kademlia::nodes::Node>, rpc: kademlia::RPCMessage,
 
 	// Sends all replys 
 	for (ip,reply) in replys {
-		match r_table.get(&ip) {
-			Some(tx) => {
-				tx.send(reply).expect("Failed to send");
-			},
-			None => {
+		// match r_table.get(&ip) {
+			// Some(tx) => {
+			// 	tx.send(reply).expect("Failed to send");
+			// },
+			// None => {
 				match network.lock().unwrap().get(&ip) {
 					Some(tx) => {
 						// Add tx clone to thread table if it doesn't have it
@@ -175,8 +175,8 @@ fn handle(current: &mut Box<kademlia::nodes::Node>, rpc: kademlia::RPCMessage,
 					},
 					None => println!("Can't find node with ip: {:?}", &ip)
 				}
-			}
-		}
+			// }
+		// }
 	}
 }
 
