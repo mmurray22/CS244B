@@ -9,7 +9,6 @@
 //!TODO Questions which need to be answered: Are we little or big endian?
 // use serde::{Serialize, Deserialize};
 // use serde_derive::{Serialize, Deserialize};
-use std::collections::LinkedList;
 #[path = "./nodes.rs"] pub mod nodes;
 
 const ALPHA : usize = 3;
@@ -41,7 +40,7 @@ pub struct RPCMessage {
 // Handler functions for all RPCs
 impl RPCMessage {
 
-    fn create_new_rpc(current: &mut Box<nodes::Node>, payload:RPCType) -> RPCMessage {
+    fn create_new_rpc(current: Box<nodes::Node>, payload:RPCType) -> RPCMessage {
         RPCMessage {
             rpc_token: nodes::ID {id: [0; 20]},
             caller_node: nodes::ZipNode::new(&current),
@@ -55,7 +54,7 @@ impl RPCMessage {
         println!("Ping from {:?} to {:?}",self.caller_node.ip, current.get_ip());
 
         let mut replys = Vec::new();
-        let rpc = RPCMessage::create_new_rpc(current, RPCType::PingReply);
+        let rpc = RPCMessage::create_new_rpc((*current).clone(), RPCType::PingReply);
         replys.push((self.caller_node.ip.clone(), rpc));
         return replys;
     }
@@ -78,7 +77,7 @@ impl RPCMessage {
         match self.payload {
             RPCType::Store(key,val) => {
                 current.storage.insert(key,val);
-                let rpc = RPCMessage::create_new_rpc(current, RPCType::StoreReply);
+                let rpc = RPCMessage::create_new_rpc((*current).clone(), RPCType::StoreReply);
                 replys.push((self.caller_node.ip.clone(),rpc));
             },
             _ => println!("Store Failed")
@@ -105,19 +104,19 @@ impl RPCMessage {
             RPCType::FindValue(target_key, lookup_key) => {
                 match current.storage.get(&target_key) {
                     Some(val) => {
-                        let rpc = RPCMessage::create_new_rpc(current, RPCType::Value(*val, lookup_key));
+                        let rpc = RPCMessage::create_new_rpc((*current).clone(), RPCType::Value(*val, lookup_key));
                         replys.push((self.caller_node.ip.clone(),rpc));
                     },
                     None => {
                         let k_closest = current.find_closest_k(target_key);
-                        let rpc = RPCMessage::create_new_rpc(current, RPCType::FindReply(target_key, k_closest, lookup_key));
+                        let rpc = RPCMessage::create_new_rpc((*current).clone(), RPCType::FindReply(target_key, k_closest, lookup_key));
                         replys.push((self.caller_node.ip.clone(), rpc));
                     }
                 }
             },
             RPCType::FindNode(target_key, lookup_key) => {
                 let k_closest = current.find_closest_k(target_key);
-                let rpc = RPCMessage::create_new_rpc(current, RPCType::FindReply(target_key, k_closest, lookup_key));
+                let rpc = RPCMessage::create_new_rpc((*current).clone(), RPCType::FindReply(target_key, k_closest, lookup_key));
                 replys.push((self.caller_node.ip.clone(), rpc));
             },
             _ => println!("IMPOSSIBLE")
@@ -143,7 +142,7 @@ impl RPCMessage {
                 if done_flag {
                     if val_flag {
                         for zip in zips {
-                            let rpc = RPCMessage::create_new_rpc(current, RPCType::Store(target_key, val));
+                            let rpc = RPCMessage::create_new_rpc((*current).clone(), RPCType::Store(target_key, val));
                             replys.push((zip.ip.clone(),rpc));
                             current.lookup_end(lookup_key);
                         }
@@ -153,12 +152,12 @@ impl RPCMessage {
                 } else {
                     if val_flag {
                         for zip in zips {
-                            let rpc = RPCMessage::create_new_rpc(current, RPCType::FindValue(target_key, lookup_key));
+                            let rpc = RPCMessage::create_new_rpc((*current).clone(), RPCType::FindValue(target_key, lookup_key));
                             replys.push((zip.ip.clone(),rpc));
                         }
                     } else {
                         for zip in zips {
-                            let rpc = RPCMessage::create_new_rpc(current, RPCType::FindNode(target_key, lookup_key));
+                            let rpc = RPCMessage::create_new_rpc((*current).clone(), RPCType::FindNode(target_key, lookup_key));
                             replys.push((zip.ip.clone(),rpc));
                         }
                     }
@@ -196,9 +195,11 @@ impl RPCMessage {
         match self.payload {
             RPCType::ClientStore(key,val) => {
                 let (zips,lookup_key) = current.lookup_init(key,val,true);
+                println!("IMMEDIATE SIZE: {:?}", zips.len());
                 for zip in zips {
-                    let rpc = RPCMessage::create_new_rpc(current, RPCType::FindNode(key, lookup_key));
+                    let rpc = RPCMessage::create_new_rpc((*current).clone(), RPCType::FindNode(key, lookup_key));
                     replys.push((zip.ip.clone(), rpc));
+                    println!("SIZE INSIDE: {:?}", replys.len());
                 }
             },
             _ => println!("IMPOSSIBLE")
@@ -216,7 +217,7 @@ impl RPCMessage {
             RPCType::ClientGet(key) => {
                 let (zips,lookup_key) = current.lookup_init(key,0,false);
                 for zip in zips {
-                    let rpc = RPCMessage::create_new_rpc(current, RPCType::FindValue(key, lookup_key));
+                    let rpc = RPCMessage::create_new_rpc((*current).clone(), RPCType::FindValue(key, lookup_key));
                     replys.push((zip.ip.clone(), rpc));
                 }
             },

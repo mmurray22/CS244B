@@ -9,9 +9,7 @@ extern crate serde_json;
 extern crate serde_derive;
 
 use std::env;
-use std::str::FromStr;
 use std::io::{self};
-use std::collections::LinkedList;
 
 mod nodes;
 mod routing;
@@ -26,11 +24,6 @@ fn main () -> () {
         println!("Running test harness");
         run_test_harness();
     } 
-    /*else {
-        let test_node : Box<nodes::Node> =  nodes::Node::new(args[1].clone(), DEFAULT_PORT);
-        let base_id : nodes::ID = <nodes::ID>::from_str(&args[3].clone()).unwrap();
-        bootstrap(test_node, args[2].clone(), base_id.clone());
-    }*/
 }
 
 /*fn bootstrap(mut pre_node: Box<nodes::Node>, base_ip: String, base_id: nodes::ID) {

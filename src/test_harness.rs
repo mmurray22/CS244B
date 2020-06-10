@@ -1,5 +1,4 @@
 /*For communicating over threads*/
-use std::collections::LinkedList;
 use std::collections::HashMap;
 use std::thread;
 use std::sync::{Arc, Mutex, mpsc::*};
