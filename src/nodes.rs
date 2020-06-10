@@ -4,6 +4,8 @@ use std::str::FromStr;
 use crypto::digest::Digest;
 use crypto::sha1::Sha1;
 use std::collections::HashMap;
+use std::collections::HashSet;
+use std::iter::FromIterator;
 
 pub const BUCKET_SIZE: usize = 20; //Maximum length of kbuckets
 const BIT_SLICES: usize = 20; //8*20 = 160 bits
@@ -21,7 +23,7 @@ pub struct Pair {
     value: u64
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Hash, Eq)]
 pub struct ID{
     pub id: [u8; BIT_SLICES],
 }
@@ -31,16 +33,29 @@ pub struct Node {
     key: u64,
     ip: String,
     port: u64,
-    lookup_map: HashMap<u64,Vec<ID>>,
+    lookup_map: HashMap<u64,(Option<u64>, HashSet<ZipNode>, HashSet<ZipNode>)>,
+    lookup_counter: u64,
     pub storage: HashMap<u64,u64>,
     kbuckets: Vec<LinkedList<ZipNode>>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Hash, Eq)]
 pub struct ZipNode {
     pub id: ID,
     pub ip: String,
     pub port: u64,
+}
+
+impl PartialEq for ZipNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.id.id == other.id.id
+    }
+}
+
+impl PartialEq for ID {
+    fn eq(&self, other: &Self) -> bool {
+        self.id.iter().zip(other.id.iter()).all(|(a,b)| a == b) 
+    }
 }
 
 trait IDTrait {
@@ -105,6 +120,7 @@ impl Node {
             port: port,
             storage: HashMap::new(),
             lookup_map: HashMap::new(),
+            lookup_counter: 0,
             kbuckets: Vec::with_capacity(DISTANCE_POINTS),
         });
         node.kbuckets = vec![LinkedList::new(); DISTANCE_POINTS];
@@ -170,26 +186,72 @@ impl Node {
         return ret_vec;
     }
 
-    pub fn lookup_init(&self, target_id: u64, val: u64, store: bool) -> (Vec<ZipNode>, u64) {
-        return (Vec::new(),0);
+    // Takes in target_id, and possibly a value to later store if store is true
+    // Returns a vector of zipnodes to send to, and a lookup key
+    pub fn lookup_init(&mut self, target_id: u64, val: u64, store: bool) -> (Vec<ZipNode>, u64) {
+
+        let zips = self.find_closest_k(target_id);
+        let lookup_key = self.lookup_counter;
+        if store {
+            self.lookup_map.insert(lookup_key, (Some(val), HashSet::from_iter(zips.iter().cloned()), HashSet::new()));
+        } else {
+            self.lookup_map.insert(lookup_key, (None, HashSet::from_iter(zips.iter().cloned()), HashSet::new()));
+        }
+
+        return (zips,lookup_key);
+    }
+
+    // Takes in the zip node it recieved an RPC from, its k_closest nodes, and a lookup key
+    // Returns a vector of zipnode replys, possibly a value, 
+    pub fn lookup_update(&mut self, rec_zip: ZipNode, k_closest: Vec<ZipNode>, 
+        target_key:u64, lookup_key: u64) -> (Vec<ZipNode>, u64, bool, bool) {
+        
+        match self.lookup_map.get_mut(&lookup_key) {
+            Some((opt_val, sent, rec)) => {
+                // If recieve is valid add sent messages
+                if sent.contains(&rec_zip) {
+                    let mut new_zips = Vec::new();
+                    // Add k_closest to sent set
+                    for zip in k_closest {
+                        if !rec.contains(&zip) && !sent.contains(&zip) {
+                            sent.insert(zip.clone());
+                            new_zips.push(zip.clone())
+                        }
+                    }
+                    sent.remove(&rec_zip);
+                    rec.insert(rec_zip.clone());
+
+                    match opt_val {
+                        // Send store rpcs or continue searching
+                        Some(val) => {
+                            if sent.len() == 0 {
+                                return (new_zips, *val, true, true)
+                            } else {
+                                return (new_zips, *val, true, false);
+                            }
+                        },
+                        // Stop or continue searching
+                        None => {
+                            if sent.len() == 0 {
+                                return (new_zips, 0, false, true);
+                            } else {
+                                return (new_zips, 0, false, false);
+                            }
+                        }
+                    }
+                } 
+                return (Vec::new(), 0, false, false);
+            },
+            None => return (Vec::new(), 0, false, false)
+        }
     }
 
 
-    pub fn lookup_update(&self, k_closest: Vec<ZipNode>, lookup_key: u64) -> (Vec<ZipNode>, u64, bool) {
-        return (Vec::new(), 0, true);
-    }
-
-
-    pub fn lookup_end(&self, lookup_key: u64) {
-
+    pub fn lookup_end(&mut self, lookup_key: u64) {
+        self.lookup_map.remove(&lookup_key);
     }
 }
 
-impl PartialEq for ZipNode {
-    fn eq(&self, other: &Self) -> bool {
-        self.id.id == other.id.id
-    }
-}
 
 impl ZipNode {
     pub fn new(node: &Box<Node>) -> ZipNode {

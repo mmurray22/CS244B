@@ -22,7 +22,7 @@ pub enum RPCType {
     StoreReply,
     FindNode(u64, u64),
     FindValue(u64, u64),
-    FindReply(Vec<nodes::ZipNode>, u64),
+    FindReply(u64, Vec<nodes::ZipNode>, u64),
     ClientStore(u64,u64),
     ClientGet(u64),
     Value(u64, u64),
@@ -133,22 +133,22 @@ impl RPCMessage {
         println!("Find from {:?} to {:?}",self.caller_node.ip, current.get_ip());
 
         match self.payload {
-            RPCType::FindValue(key, lookup_key) => {
-                match current.storage.get(&key) {
+            RPCType::FindValue(target_key, lookup_key) => {
+                match current.storage.get(&target_key) {
                     Some(val) => {
                         let rpc = RPCMessage::create_new_rpc(current, RPCType::Value(*val, lookup_key));
                         replys.push((self.caller_node.ip.clone(),rpc));
                     },
                     None => {
-                        let k_closest = current.find_closest_k(key);
-                        let rpc = RPCMessage::create_new_rpc(current, RPCType::FindReply(k_closest, lookup_key));
+                        let k_closest = current.find_closest_k(target_key);
+                        let rpc = RPCMessage::create_new_rpc(current, RPCType::FindReply(target_key, k_closest, lookup_key));
                         replys.push((self.caller_node.ip.clone(), rpc));
                     }
                 }
             },
-            RPCType::FindNode(key, lookup_key) => {
-                let k_closest = current.find_closest_k(key);
-                let rpc = RPCMessage::create_new_rpc(current, RPCType::FindReply(k_closest, lookup_key));
+            RPCType::FindNode(target_key, lookup_key) => {
+                let k_closest = current.find_closest_k(target_key);
+                let rpc = RPCMessage::create_new_rpc(current, RPCType::FindReply(target_key, k_closest, lookup_key));
                 replys.push((self.caller_node.ip.clone(), rpc));
             },
             _ => println!("IMPOSSIBLE")
@@ -166,11 +166,33 @@ impl RPCMessage {
         println!("FindAck from {:?} to {:?}",self.caller_node.ip, current.get_ip());
 
         match self.payload.clone() {
-            RPCType::FindReply(k_closest,lookup_key) => {
-                let (zips, key, valFlag) = current.lookup_update(k_closest, lookup_key);
-                for zip in zips {
-                    let rpc = RPCMessage::create_new_rpc(current, RPCType::FindNode(key, lookup_key));
-                    replys.push((zip.ip.clone(),rpc));
+            RPCType::FindReply(target_key,k_closest,lookup_key) => {
+
+                let (zips, val, val_flag, done_flag) = 
+                    current.lookup_update(self.caller_node.clone(), k_closest, target_key, lookup_key);
+
+                if done_flag {
+                    if val_flag {
+                        for zip in zips {
+                            let rpc = RPCMessage::create_new_rpc(current, RPCType::Store(target_key, val));
+                            replys.push((zip.ip.clone(),rpc));
+                            current.lookup_end(lookup_key);
+                        }
+                    } else {
+                        current.lookup_end(lookup_key);
+                    }
+                } else {
+                    if val_flag {
+                        for zip in zips {
+                            let rpc = RPCMessage::create_new_rpc(current, RPCType::FindValue(target_key, lookup_key));
+                            replys.push((zip.ip.clone(),rpc));
+                        }
+                    } else {
+                        for zip in zips {
+                            let rpc = RPCMessage::create_new_rpc(current, RPCType::FindNode(target_key, lookup_key));
+                            replys.push((zip.ip.clone(),rpc));
+                        }
+                    }
                 }
                 
             },
@@ -240,7 +262,6 @@ impl RPCMessage {
             -> Vec<(String,RPCMessage)> {
 
         //// Add zipnode to kbuckets
-        // let dist = nodes::Node::key_distance(current.get_id(), self.caller_node.id);
         nodes::ZipNode::add_entry(current, self.caller_node.clone());
 
         let replys = match &self.payload {
@@ -250,7 +271,7 @@ impl RPCMessage {
             RPCType::StoreReply => self.store_reply(current),
             RPCType::FindNode(id, lookup_key) => self.find(current),
             RPCType::FindValue(id, lookup_key) => self.find(current),
-            RPCType::FindReply(node, lookup_key) => self.find_reply(current),
+            RPCType::FindReply(target_key, node, lookup_key) => self.find_reply(current),
             RPCType::Value(val, lookup_key) => self.value(current),
             RPCType::ClientStore(key,val) => self.client_store(current),
             RPCType::ClientGet(key) => self.client_get(current),
