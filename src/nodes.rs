@@ -4,7 +4,6 @@ use std::str::FromStr;
 use crypto::digest::Digest;
 use crypto::sha1::Sha1;
 use std::collections::HashMap;
-//use std::collections::LinkedList;
 
 pub const BUCKET_SIZE: usize = 20; //Maximum length of kbuckets
 const BIT_SLICES: usize = 20; //8*20 = 160 bits
@@ -15,8 +14,6 @@ const DISTANCE_POINTS: usize = 160; //160 distance points
 
 pub const K: usize = 2;
 pub const SIG: usize = 1;
-
-//const DEFAULT_NODES
 
 #[allow(dead_code)]
 pub struct Pair {
@@ -44,7 +41,6 @@ pub struct ZipNode {
     pub id: ID,
     pub ip: String,
     pub port: u64,
-    pub kbuckets: Vec<LinkedList<ZipNode>>,
 }
 
 trait IDTrait {
@@ -54,11 +50,11 @@ trait IDTrait {
     fn get_random_node_id () -> ID;
 }
 
-impl IDTrait for ID {
+impl ID {
     fn get_id(self) -> ID {
         ID{id: self.id}  
     }
-    fn get_key_hash(key: u64) -> [u8; BIT_SLICES]{
+    pub fn get_key_hash(key: u64) -> [u8; BIT_SLICES]{
         let mut hasher = Sha1::new();
         let mut array = [0; BIT_SLICES];
         hasher.input(&key.to_ne_bytes());
@@ -66,7 +62,7 @@ impl IDTrait for ID {
         array
     }
 
-    fn xor(id1: ID, id2: ID) -> usize {
+    pub fn xor(id1: ID, id2: ID) -> usize {
        let mut temp_id = [0; BIT_SLICES];
        let mut length_of_prefix : usize = 0;
        for i in 0..BIT_SLICES {
@@ -79,7 +75,7 @@ impl IDTrait for ID {
        length_of_prefix
     }
 
-    fn get_random_node_id() -> ID {
+    pub fn get_random_node_id() -> ID {
         let array: [u8; BIT_SLICES] = rand::random();
         ID{id: array}
     }
@@ -153,7 +149,40 @@ impl Node {
         ZipNode::add_entry(primary_node, small_node)
     }
 
+    pub fn find_closest_k(&self, target_id: u64) -> Vec<ZipNode>{
+        let mut ret_vec = Vec::with_capacity(BUCKET_SIZE);
+        let mut dist = Node::key_distance(self.id, ID{id: ID::get_key_hash(target_id)});
+        loop {
+            if ret_vec.len() < ALPHA && dist != 0 {
+                dist-=1;
+            } else {
+                break;
+            }
+            let mut iter = self.kbuckets[dist].iter();
+            while iter.next() != None {
+                if ret_vec.len() < ALPHA {
+                    ret_vec.push((iter.next().unwrap()).clone());
+                } else {
+                    break;
+                }
+            }
+        }
+        return ret_vec;
+    }
 
+    pub fn lookup_init(&self, target_id: u64, val: u64, store: bool) -> (Vec<ZipNode>, u64) {
+        return (Vec::new(),0);
+    }
+
+
+    pub fn lookup_update(&self, k_closest: Vec<ZipNode>, lookup_key: u64) -> (Vec<ZipNode>, u64, bool) {
+        return (Vec::new(), 0, true);
+    }
+
+
+    pub fn lookup_end(&self, lookup_key: u64) {
+
+    }
 }
 
 impl PartialEq for ZipNode {
@@ -168,7 +197,6 @@ impl ZipNode {
             id: node.id.clone(),
             ip: node.ip.clone(),
             port: node.port.clone(),
-            kbuckets: node.kbuckets.clone(),
         };
         default_zip
     }

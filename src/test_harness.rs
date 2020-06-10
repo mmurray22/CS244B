@@ -44,11 +44,8 @@ impl Network {
 				if index == i {
 					let add = kademlia::RPCMessage {
 						rpc_token: kademlia::nodes::ID {id: [0; 20]},
-						lookup_key: 0,
 						caller_node: ozip.clone(),
-						callee_id: kademlia::nodes::ID {id: [0; 20]},
 						payload: kademlia::RPCType::ClientGet(key),
-					    lookup_id: Vec::<kademlia::nodes::ZipNode>::new(),
                     };
 
 					tx.send(add).expect("Failed to join network");
@@ -65,15 +62,12 @@ impl Network {
 	pub fn client_remove_node(&mut self, ip: String) {
 		let kill = kademlia::RPCMessage {
 			rpc_token: kademlia::nodes::ID {id: [0; 20]},
-			lookup_key: 0,
             caller_node: kademlia::nodes::ZipNode{
 				id: kademlia::nodes::ID { id: [0; 20]},
 				ip: "".to_string(),
 				port: 0,
-                kbuckets: Vec::<LinkedList<kademlia::nodes::ZipNode>>::new()},
-			callee_id: kademlia::nodes::ID {id: [0; 20]},
+            },
 			payload: kademlia::RPCType::KillNode,
-            lookup_id: Vec::<kademlia::nodes::ZipNode>::new(),
 		};
 		self.send_rpc(ip.clone(),kill);
 		self.net_map.lock().unwrap().remove(&ip);
@@ -100,15 +94,12 @@ impl Drop for Network {
 		for node in &mut self.net_map.lock().unwrap().values() {
 			let kill = kademlia::RPCMessage {
 				rpc_token: kademlia::nodes::ID {id: [0; 20]},
-				lookup_key: 0,
                 caller_node: kademlia::nodes::ZipNode {
 					id: kademlia::nodes::ID { id: [0; 20]},
 					ip: "".to_string(),
 					port: 0,
-                    kbuckets: Vec::<LinkedList<kademlia::nodes::ZipNode>>::new()},
-				callee_id: kademlia::nodes::ID {id: [0; 20]},
+                },
 				payload: kademlia::RPCType::KillNode,
-			    lookup_id: Vec::<kademlia::nodes::ZipNode>::new(),
             };
 
 			node.send(kill).expect("Failed to kill thread");
@@ -193,9 +184,8 @@ fn handle(current: &mut Box<kademlia::nodes::Node>, rpc: kademlia::RPCMessage,
 fn debug(rpc: kademlia::RPCMessage, node: &Box<kademlia::nodes::Node>) -> Vec<(String,kademlia::RPCMessage)> {
 	match rpc.payload {
 		kademlia::RPCType::Debug => {
-			println!("Node {:?} recieved debug to {:?} from {:?}", 
+			println!("Node {:?} recieved debug from {:?}", 
 			kademlia::nodes::Node::get_id(node),
-			rpc.callee_id,
 			rpc.caller_node.ip);
 		}
 		_ => println!("IMPOSSIBLE")
