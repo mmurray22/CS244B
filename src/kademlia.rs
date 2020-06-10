@@ -200,6 +200,7 @@ impl RPCMessage {
                     let rpc = RPCMessage::create_new_rpc(current, RPCType::FindNode(key, lookup_key));
                     replys.push((zip.ip.clone(), rpc));
                 }
+                println!("SIZE: {:?}", replys.len());
             },
             _ => println!("IMPOSSIBLE")
         }

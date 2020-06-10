@@ -165,7 +165,7 @@ impl Node {
         ZipNode::add_entry(primary_node, small_node)
     }
 
-    pub fn find_closest_k(&self, target_id: u64) -> Vec<ZipNode>{
+    pub fn find_closest_k(&mut self, target_id: u64) -> Vec<ZipNode>{
         let mut ret_vec = Vec::with_capacity(BUCKET_SIZE);
         let mut dist = Node::key_distance(self.id, ID{id: ID::get_key_hash(target_id)});
         loop {
@@ -174,10 +174,9 @@ impl Node {
             } else {
                 break;
             }
-            let mut iter = self.kbuckets[dist].iter();
-            while iter.next() != None {
+            for elem in self.kbuckets[dist].iter_mut() {
                 if ret_vec.len() < ALPHA {
-                    ret_vec.push((iter.next().unwrap()).clone());
+                    ret_vec.push(elem.clone());
                 } else {
                     break;
                 }
