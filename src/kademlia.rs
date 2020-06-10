@@ -40,37 +40,6 @@ pub struct RPCMessage {
 
 // Handler functions for all RPCs
 impl RPCMessage {
-    /*Find ALPHA closest nodes*/
-    // pub fn lookup_init(&mut self, target_id: nodes::ID)
-    //                     -> Vec<nodes::ZipNode> {
-    //     //1. Get all k nodes with IDs closest to the target_id 
-    //     let mut ret_vec = Vec::with_capacity(nodes::BUCKET_SIZE);
-    //     let mut dist = nodes::Node::key_distance(target_id, self.caller_node.id);
-    //     loop {
-    //         if ret_vec.len() < ALPHA && dist != 0 {
-    //             dist-=1;
-    //         } else {
-    //             break;
-    //         }
-    //         let mut iter = self.caller_node.kbuckets[dist].iter();
-    //         while iter.next() != None {
-    //             if ret_vec.len() < ALPHA {
-    //                 ret_vec.push((iter.next().unwrap()).clone());
-    //             } else {
-    //                 break;
-    //             }
-    //         }
-    //     }
-    //     self.lookup_key = ret_vec.len();
-    //     self.lookup_id = ret_vec.clone();
-    //     return ret_vec;
-    // }
-
-    // pub fn lookup_update(&mut self, target_id: nodes::ID, _zip_node : nodes::ZipNode) -> Vec<nodes::ZipNode> {
-    //     //2. Order those k nodes and select the closest ALPHA
-    //     self.lookup_key -= 1;
-    //     self.lookup_init(target_id)
-    // }
 
     fn create_new_rpc(current: &mut Box<nodes::Node>, payload:RPCType) -> RPCMessage {
         RPCMessage {
