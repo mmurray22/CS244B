@@ -26,15 +26,6 @@ fn main () -> () {
     } 
 }
 
-/*fn bootstrap(mut pre_node: Box<nodes::Node>, base_ip: String, base_id: nodes::ID) {
-    let default_zip = nodes::ZipNode::new(base_id, base_ip, DEFAULT_PORT);
-    let pre_node_id = pre_node.get_id(); //nodes::Node::get_id(&pre_node); 
-    let dist = nodes::Node::key_distance(base_id, pre_node_id);
-    nodes::ZipNode::add_entry(&mut pre_node, default_zip);
-
-    //Invoke Self Find_Node RPC
-    //kademlia::RPCMessage::find(true, &pre_node);
-}*/
 
 fn run_test_harness() {
     let mut num_nodes = 100;
@@ -52,10 +43,9 @@ fn run_test_harness() {
 
         // Generates empty rpc
         let mut rpc = test_harness::kademlia::RPCMessage {
-            rpc_token: test_harness::kademlia::nodes::ID {id: [0; 20]},
             caller_node: test_harness::kademlia::nodes::ZipNode {
-                id: test_harness::kademlia::nodes::ID { id: [0; 20]},
-                ip: "1".to_string(),
+                id: 0,
+                ip: "".to_string(),
                 port: 0,},
             payload: test_harness::kademlia::RPCType::Ping,
         };

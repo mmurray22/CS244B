@@ -42,7 +42,7 @@ impl Network {
 				for ozip in self.nodes_map.values() {
 				if index == i {
 					let add = kademlia::RPCMessage {
-						rpc_token: kademlia::nodes::ID {id: [0; 20]},
+						// rpc_token: kademlia::nodes::ID {id: [0; 20]},
 						caller_node: ozip.clone(),
 						payload: kademlia::RPCType::ClientGet(key),
                     };
@@ -60,9 +60,10 @@ impl Network {
 
 	pub fn client_remove_node(&mut self, ip: String) {
 		let kill = kademlia::RPCMessage {
-			rpc_token: kademlia::nodes::ID {id: [0; 20]},
+			// rpc_token: kademlia::nodes::ID {id: [0; 20]},
             caller_node: kademlia::nodes::ZipNode{
-				id: kademlia::nodes::ID { id: [0; 20]},
+				// id: kademlia::nodes::ID { id: [0; 20]},
+				id: 0,
 				ip: "".to_string(),
 				port: 0,
             },
@@ -92,9 +93,10 @@ impl Drop for Network {
 	fn drop(&mut self) {
 		for node in &mut self.net_map.lock().unwrap().values() {
 			let kill = kademlia::RPCMessage {
-				rpc_token: kademlia::nodes::ID {id: [0; 20]},
+				// rpc_token: kademlia::nodes::ID {id: [0; 20]},
                 caller_node: kademlia::nodes::ZipNode {
-					id: kademlia::nodes::ID { id: [0; 20]},
+					// id: kademlia::nodes::ID { id: [0; 20]},
+					id: 0,
 					ip: "".to_string(),
 					port: 0,
                 },
@@ -121,7 +123,8 @@ fn start_network_node(ip: String, port: u64,
 	
 	let (tx, rx) = channel::<kademlia::RPCMessage>();
 	let node = Box::new(kademlia::nodes::Node::new(ip, port));
-	let key = node.get_key();
+	// let key = node.get_key();
+	let id = node.get_id();
 	let zip = kademlia::nodes::ZipNode::new(&node);
 
 	// Thread continuously waits on its RPC queue until it receives kill msg
@@ -146,7 +149,7 @@ fn start_network_node(ip: String, port: u64,
 		}
 	});
 
-	return (key,zip,tx,thread);
+	return (id,zip,tx,thread);
 }
 
 
@@ -162,21 +165,14 @@ fn handle(current: &mut Box<kademlia::nodes::Node>, rpc: kademlia::RPCMessage,
 
 	// Sends all replys 
 	for (ip,reply) in replys {
-		// match r_table.get(&ip) {
-			// Some(tx) => {
-			// 	tx.send(reply).expect("Failed to send");
-			// },
-			// None => {
-				match network.lock().unwrap().get(&ip) {
-					Some(tx) => {
-						// Add tx clone to thread table if it doesn't have it
-						r_table.insert(ip.clone(), tx.clone());
-						tx.send(reply).expect("Failed to send");
-					},
-					None => println!("Can't find node with ip: {:?}", &ip)
-				}
-			// }
-		// }
+		match network.lock().unwrap().get(&ip) {
+			Some(tx) => {
+				// Add tx clone to thread table if it doesn't have it
+				r_table.insert(ip.clone(), tx.clone());
+				tx.send(reply).expect("Failed to send");
+			},
+			None => println!("Can't find node with ip: {:?}", &ip)
+		}
 	}
 }
 
