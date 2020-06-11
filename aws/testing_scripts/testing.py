@@ -70,6 +70,7 @@ def cancel_all_commands():
                 ssm_client.cancel_command(CommandId=command['CommandId'])
 
 
+
 def run_nodes(ksize, alpha, instances, mean_time=100):
     ''' This function will run the actual testing for success rate once
         we have all the instances spawned and set up. It assumes instances[0]
@@ -148,7 +149,7 @@ def run_nodes(ksize, alpha, instances, mean_time=100):
 
     # note the assigned timeout is not used for the first instance, which  always remains live
     # or for the last two instances which are used to get and set nodes and do not run long lived servers
-    timeouts = [numpy.random.exponential(mean_time) for i in range(len(instances))]
+    timeouts = [np.random.exponential(mean_time) for i in range(len(instances))]
 
     command_responses = ["" for i in range(len(instances))]
 
@@ -183,7 +184,6 @@ def run_nodes(ksize, alpha, instances, mean_time=100):
             #get updated info on the status of the command
             command_info = ssm_client.get_command_invocation(CommandId=command['CommandId'],
                                               InstanceId= command['InstanceIds'][0])
-            print(command_info)
 
             if get_elapsed_time(command) > timeouts[command_idx]: #simulate node churn
                 cancel_command(command['CommandId']) #this is a blocking call and makes sure the command is cancelled
@@ -196,12 +196,12 @@ def run_nodes(ksize, alpha, instances, mean_time=100):
                 assert('sleep' in command['Parameters']['commands'][0])
 
                 # recalculate the exponentially distributed timeout here
-                timeouts[command_idx] = numpy.random.exponential(mean_time)
+                timeouts[command_idx] = np.random.exponential(mean_time)
 
                 #we must restart the kademlia server
                 commands = [bootstrap_server_command]
                 instance_ids = [command['InstanceIds'][0]]
-                command_responses[command_idx] = execute_commands_on_linux_instances(client, commands, instance_ids)
+                command_responses[command_idx] = execute_commands_on_linux_instances(ssm_client, commands, instance_ids)
 
             elif command_info['Status'] == 'InProgress' or command_info['Status'] == 'Pending':
                 pass
@@ -251,7 +251,6 @@ def run_nodes(ksize, alpha, instances, mean_time=100):
         instance_ids = [instances[set_instance_index].id] #this will be the set instance index
         command_responses[set_instance_index] = execute_commands_on_linux_instances(ssm_client, commands, instance_ids)
         if not wait_until_complete(command_responses[set_instance_index]):
-            #TODO relaunch
             pass
 
         churn()
@@ -260,12 +259,12 @@ def run_nodes(ksize, alpha, instances, mean_time=100):
         instance_ids = [instances[get_instance_index].id] #this will be the get instance index
         command_responses[get_instance_index] = execute_commands_on_linux_instances(ssm_client, commands, instance_ids)
         if not wait_until_complete(command_responses[get_instance_index]):
-            #TODO relaunch
             pass
 
         get_response = ssm_client.get_command_invocation(CommandId=command_responses[get_instance_index]['Command']['CommandId'],
                                           InstanceId= command_responses[get_instance_index]['Command']['InstanceIds'][0])
-        print(get_response)
+
+        print(get_response['StandardErrorContent'])
 
         if evaluate_get_response(get_response, key, value):
             success_list.append(1)
@@ -273,12 +272,11 @@ def run_nodes(ksize, alpha, instances, mean_time=100):
             success_list.append(0)
 
     success_rate = sum(success_list)/len(truth_table)
+
+    #so we can run again if needed by the script
+
+    cancel_all_commands()
     return success_rate
-
-
-run_nodes(20, 3, instances)
-
-
 
 instances = get_running_instances()
 
@@ -288,4 +286,18 @@ instances = get_running_instances()
 # AWS SSM Getting Started Guide: https://aws.amazon.com/getting-started/hands-on/remotely-run-commands-ec2-instance-systems-manager/
 ssm_client = boto3.client('ssm')
 
-cancel_all_commands()
+def get_results(ksize, alpha):
+    mean_times = [200, 400, 600, 800, 1000, 2000, 3000, 4000]
+    for mean_time in mean_times:
+        results_dir = "success_rates/ksize_{}_alpha_{}".format(ksize, alpha)
+
+        f = open(results_dir + '/meantime_' + str(mean_time), 'w')
+        f.write(run_nodes(ksize, alpha, instances))
+
+get_results(20, 3)
+get_results(3, 3)
+get_results(1, 1)
+get_results(2, 1)
+get_results(3, 1)
+get_results(4, 1)
+get_results(5, 1)
