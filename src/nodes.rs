@@ -1,12 +1,9 @@
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::iter::FromIterator;
+use rand::Rng;
 
-pub const K_SIZE: usize = 20; //Maximum length of kbuckets
-// const BIT_SLICES: usize = 20; //8*20 = 160 bits
-#[allow(dead_code)]
+pub const K_SIZE: usize = 20; //Maximum size of kbuckets
 const ALPHA : usize = 3;
 const DISTANCE_POINTS: usize = 64;
 
@@ -19,7 +16,6 @@ pub struct Pair {
 
 #[derive(Clone)]
 pub struct Node {
-    // id: ID,
     id: u64,
     ip: String,
     port: u64,
@@ -31,7 +27,6 @@ pub struct Node {
 
 #[derive(Clone, Hash, Eq)]
 pub struct ZipNode {
-    // pub id: ID,
     pub id: u64,
     pub ip: String,
     pub port: u64,
@@ -39,25 +34,15 @@ pub struct ZipNode {
 
 impl PartialEq for ZipNode {
     fn eq(&self, other: &Self) -> bool {
-        // self.id.id == other.id.id
         self.id == other.id
     }
 }
 
-pub fn get_ip_hash(ip: String) -> u64{
-    let mut s = DefaultHasher::new();
-    ip.hash(&mut s);
-    s.finish()
-}
-
-
 impl Node {
     pub fn new (ip: String, port: u64) -> Box<Node> {
-        // let key = rand::random();
+        let mut rng = rand::thread_rng();
         let mut node = Box::new(Node{
-            // id: ID {id: ID::get_key_hash(key)},
-            // key,
-            id: get_ip_hash(ip.clone()),
+            id: rng.gen::<u64>(),
             ip: ip,
             port: port,
             storage: HashMap::new(),
@@ -66,7 +51,6 @@ impl Node {
             kbuckets: Vec::with_capacity(DISTANCE_POINTS),
         });
         node.kbuckets = vec![Vec::with_capacity(K_SIZE); DISTANCE_POINTS];
-        //TODO: Populate kbuckets with default nodes!
         node
     }
 
@@ -98,8 +82,8 @@ impl Node {
 
     pub fn find_closest(&mut self, target_id: u64, max_size: usize) -> Vec<ZipNode>{
         let mut ret_vec = Vec::with_capacity(K_SIZE);
-
         let mut dist = Node::key_distance(self.id, target_id);
+        
         loop {
             let mut bucket = self.kbuckets[dist].clone();
             bucket.sort_by(|a, b| 

@@ -4,9 +4,7 @@ use std::thread;
 use std::sync::{Arc, Mutex, mpsc::*};
 use rand::Rng;
 
-// #[path = "./nodes.rs"] pub mod nodes;
 #[path = "./kademlia.rs"] pub mod kademlia;
-// use rpc;
 
 /* Test harness to test rpc communication between multiple threads */
 
@@ -75,7 +73,6 @@ impl Network {
 	}
 
 	// Sends rpc to node with passed ip
-	// TODO convert rpc from String to actual RPC struct
 	pub fn send_rpc(&mut self, ip: String, msg: kademlia::RPCMessage) {
 		match self.net_map.lock().unwrap().get(&ip) {
 			Some(node) => {
