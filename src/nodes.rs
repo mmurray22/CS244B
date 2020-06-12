@@ -1,8 +1,9 @@
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
+//use std::collections::hash_map::DefaultHasher;
+//use std::hash::{Hash, Hasher};
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::iter::FromIterator;
+use rand::Rng;
 
 pub const K_SIZE: usize = 20; //Maximum length of kbuckets
 // const BIT_SLICES: usize = 20; //8*20 = 160 bits
@@ -44,20 +45,17 @@ impl PartialEq for ZipNode {
     }
 }
 
-pub fn get_ip_hash(ip: String) -> u64{
+/*pub fn get_ip_hash(ip: String) -> u64{
     let mut s = DefaultHasher::new();
     ip.hash(&mut s);
     s.finish()
-}
-
+}*/
 
 impl Node {
     pub fn new (ip: String, port: u64) -> Box<Node> {
-        // let key = rand::random();
+        let mut rng = rand::thread_rng();
         let mut node = Box::new(Node{
-            // id: ID {id: ID::get_key_hash(key)},
-            // key,
-            id: get_ip_hash(ip.clone()),
+            id: rng.gen::<u64>(),
             ip: ip,
             port: port,
             storage: HashMap::new(),
@@ -66,7 +64,6 @@ impl Node {
             kbuckets: Vec::with_capacity(DISTANCE_POINTS),
         });
         node.kbuckets = vec![Vec::with_capacity(K_SIZE); DISTANCE_POINTS];
-        //TODO: Populate kbuckets with default nodes!
         node
     }
 
