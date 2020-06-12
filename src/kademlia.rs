@@ -6,9 +6,6 @@
 //! the Kademlia DHT (and for actual real users another layer will be
 //! built on top of this, but that is for later)
 
-//!TODO Questions which need to be answered: Are we little or big endian?
-// use serde::{Serialize, Deserialize};
-// use serde_derive::{Serialize, Deserialize};
 #[path = "./nodes.rs"] pub mod nodes;
 
 #[derive(Clone)]
@@ -175,7 +172,6 @@ impl RPCMessage {
     // Handle receiving value, closes lookup, and stores node at current closest
     fn value(&self, current: &mut Box<nodes::Node>) 
             -> Vec<(String,RPCMessage)> {
-        // TODO cache key,val
         let replys = Vec::new();
 
         match self.payload {
@@ -231,7 +227,7 @@ impl RPCMessage {
     pub fn receive_rpc(&self, current: &mut Box<nodes::Node>) 
             -> Vec<(String,RPCMessage)> {
 
-        //// Add zipnode to kbuckets
+        // Add zipnode to kbuckets
         if self.caller_node.ip != "client" {
             nodes::ZipNode::add_entry(current, self.caller_node.clone());
         }
