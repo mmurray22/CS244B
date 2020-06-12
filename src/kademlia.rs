@@ -11,8 +11,6 @@
 // use serde_derive::{Serialize, Deserialize};
 #[path = "./nodes.rs"] pub mod nodes;
 
-const ALPHA : usize = 3;
-
 #[derive(Clone)]
 pub enum RPCType {
     Ping,
@@ -174,7 +172,7 @@ impl RPCMessage {
         return replys;
     }
 
-    // Handle recieving value, closes lookup, and stores node at current closest
+    // Handle receiving value, closes lookup, and stores node at current closest
     fn value(&self, current: &mut Box<nodes::Node>) 
             -> Vec<(String,RPCMessage)> {
         // TODO cache key,val
@@ -230,7 +228,7 @@ impl RPCMessage {
     }
 
     // Generic handler function
-    pub fn recieve_rpc(&self, current: &mut Box<nodes::Node>) 
+    pub fn receive_rpc(&self, current: &mut Box<nodes::Node>) 
             -> Vec<(String,RPCMessage)> {
 
         //// Add zipnode to kbuckets
@@ -241,14 +239,14 @@ impl RPCMessage {
         let replys = match &self.payload {
             RPCType::Ping => self.ping(current),
             RPCType::PingReply => self.ping_reply(current),
-            RPCType::Store(key, val) => self.store(current),
+            RPCType::Store(_key, _val) => self.store(current),
             RPCType::StoreReply => self.store_reply(current),
-            RPCType::FindNode(id, lookup_key) => self.find(current),
-            RPCType::FindValue(id, lookup_key) => self.find(current),
-            RPCType::FindReply(target_key, node, lookup_key) => self.find_reply(current),
-            RPCType::Value(val, lookup_key) => self.value(current),
-            RPCType::ClientStore(key,val) => self.client_store(current),
-            RPCType::ClientGet(key) => self.client_get(current),
+            RPCType::FindNode(_id, _lookup_key) => self.find(current),
+            RPCType::FindValue(_id, _lookup_key) => self.find(current),
+            RPCType::FindReply(_target_key, _node, _lookup_key) => self.find_reply(current),
+            RPCType::Value(_val, _lookup_key) => self.value(current),
+            RPCType::ClientStore(_key, _val) => self.client_store(current),
+            RPCType::ClientGet(_key) => self.client_get(current),
             _ => Vec::new()
         };
 

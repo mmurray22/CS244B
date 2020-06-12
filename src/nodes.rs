@@ -1,8 +1,3 @@
-use std::collections::LinkedList;
-use std::str::FromStr;
-
-use crypto::digest::Digest;
-use crypto::sha1::Sha1;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::collections::HashMap;
@@ -11,10 +6,8 @@ use std::iter::FromIterator;
 
 pub const K_SIZE: usize = 20; //Maximum length of kbuckets
 // const BIT_SLICES: usize = 20; //8*20 = 160 bits
-const ALPHA : usize = 3;
-
 #[allow(dead_code)]
-// const DISTANCE_POINTS: usize = 160; //160 distance points
+const ALPHA : usize = 3;
 const DISTANCE_POINTS: usize = 64;
 
 
@@ -90,14 +83,10 @@ impl Node {
     }
 
     pub fn key_distance (node_id1: u64, node_id2: u64) -> usize {
-        let test = 2;
-        let test2 = 4;
-        // println!("{:?}", test ^ test2);
-
         let xor = node_id1 ^ node_id2;
         if xor == 0 {return 0}
         for i in 0..64 {
-            let test = (1 << i);
+            let test = 1 << i;
             if xor / test == 0 {
                 return i as usize;
             }  

@@ -19,7 +19,5 @@ serde_json = "1.0"
 name = "service"
 path = "src/lib.rs"
 
-[build]
-rustflags = ["-Awarnings"]
 
 
