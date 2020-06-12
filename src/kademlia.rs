@@ -44,10 +44,9 @@ impl RPCMessage {
         }
     }
 
-
     fn ping(&self, current: &mut Box<nodes::Node>) 
             -> Vec<(String,RPCMessage)> {
-        println!("Ping from {:?} to {:?}",self.caller_node.ip, current.get_ip());
+        // println!("Ping from {:?} to {:?}",self.caller_node.ip, current.get_ip());
 
         let mut replys = Vec::new();
         let rpc = RPCMessage::create_new_rpc((*current).clone(), RPCType::PingReply);
@@ -58,7 +57,7 @@ impl RPCMessage {
 
     fn ping_reply(&self, current: &mut Box<nodes::Node>) 
             -> Vec<(String,RPCMessage)> {
-        println!("PingACk from {:?} to {:?}",self.caller_node.ip, current.get_ip());
+        // println!("PingACk from {:?} to {:?}",self.caller_node.ip, current.get_ip());
 
         let replys = Vec::new();
         return replys;
@@ -72,7 +71,7 @@ impl RPCMessage {
         match self.payload {
             RPCType::Store(key,val) => {
                 let dist = nodes::Node::key_distance(current.get_id(), key);
-                println!("Store from {:?} to {:?}, Dist:{:?}",self.caller_node.ip, current.get_ip(), dist);
+                // println!("Store from {:?} to {:?}, Dist:{:?}",self.caller_node.ip, current.get_ip(), dist);
                 current.storage.insert(key,val);
                 let rpc = RPCMessage::create_new_rpc((*current).clone(), RPCType::StoreReply);
                 replys.push((self.caller_node.ip.clone(),rpc));
@@ -85,7 +84,7 @@ impl RPCMessage {
 
     fn store_reply(&self, current: &mut Box<nodes::Node>) 
             -> Vec<(String,RPCMessage)> {
-        println!("StoreAck from {:?} to {:?}",self.caller_node.ip, current.get_ip());
+        // println!("StoreAck from {:?} to {:?}",self.caller_node.ip, current.get_ip());
 
         let replys = Vec::new();
         return replys;
@@ -99,7 +98,7 @@ impl RPCMessage {
         match self.payload {
             RPCType::FindValue(target_key, lookup_key) => {
                 let dist = nodes::Node::key_distance(current.get_id(), target_key);
-                println!("Find from {:?} to {:?}, Dist:{:?}",self.caller_node.ip, current.get_ip(), dist);
+                // println!("Find from {:?} to {:?}, Dist:{:?}",self.caller_node.ip, current.get_ip(), dist);
 
                 match current.storage.get(&target_key) {
                     Some(val) => {
@@ -115,7 +114,7 @@ impl RPCMessage {
             },
             RPCType::FindNode(target_key, lookup_key) => {
                  let dist = nodes::Node::key_distance(current.get_id(), target_key);
-                println!("Find from {:?} to {:?}, Dist:{:?}",self.caller_node.ip, current.get_ip(), dist);
+                // println!("Find from {:?} to {:?}, Dist:{:?}",self.caller_node.ip, current.get_ip(), dist);
 
                 let k_closest = current.find_closest(target_key, nodes::K_SIZE);
                 let rpc = RPCMessage::create_new_rpc((*current).clone(), RPCType::FindReply(target_key, k_closest, lookup_key));
@@ -132,10 +131,13 @@ impl RPCMessage {
             -> Vec<(String,RPCMessage)> {
         // Update ongoing lookup and possibly send more find rpcs or send store
         let mut replys = Vec::new();
-        println!("FindAck from {:?} to {:?}",self.caller_node.ip, current.get_ip());
+        // println!("FindAck from {:?} to {:?}",self.caller_node.ip, current.get_ip());
 
         match self.payload.clone() {
             RPCType::FindReply(target_key,k_closest,lookup_key) => {
+                for zip in &k_closest {
+                    nodes::ZipNode::add_entry(current, zip.clone());
+                }
 
                 let (zips, val, val_flag, done_flag) = 
                     current.lookup_update(self.caller_node.clone(), k_closest, target_key, lookup_key);

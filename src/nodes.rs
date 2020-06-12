@@ -98,17 +98,17 @@ impl Node {
 
     pub fn find_closest(&mut self, target_id: u64, max_size: usize) -> Vec<ZipNode>{
         let mut ret_vec = Vec::with_capacity(K_SIZE);
-        // let mut dist = Node::key_distance(self.id, ID{id: ID::get_key_hash(target_id)});
 
         let mut dist = Node::key_distance(self.id, target_id);
         loop {
-            self.kbuckets[dist].sort_by(|a, b| 
+            let mut bucket = self.kbuckets[dist].clone();
+            bucket.sort_by(|a, b| 
                 Node::key_distance(target_id,a.id).partial_cmp(&Node::key_distance(target_id, b.id)).unwrap());
 
             if ret_vec.len() == max_size {
                 break;
             }
-            for elem in self.kbuckets[dist].iter_mut() {
+            for elem in bucket.iter_mut() {
                 if ret_vec.len() < max_size {
                     ret_vec.push(elem.clone());
                 } else {
@@ -147,20 +147,44 @@ impl Node {
             Some((opt_val, sent, rec)) => {
                 // If recieve is valid add sent messages
                 if sent.contains(&rec_zip) {
-                    let mut new_zips = Vec::new();
-                    // Add k_closest to sent set
-                    for zip in k_closest {
-                        if !rec.contains(&zip) && !sent.contains(&zip) {
-                            sent.insert(zip.clone());
-                            new_zips.push(zip.clone());
-                            // Return at most only ALPHA requests
-                            if new_zips.len() == ALPHA {
-                                break;
-                            }
-                        }
-                    }
                     sent.remove(&rec_zip);
                     rec.insert(rec_zip.clone());
+
+                    let mut new_zips = Vec::new();
+                    let mut dist = Node::key_distance(self.id, _target_key);
+                    loop {
+                        let mut bucket = self.kbuckets[dist].clone();
+                        bucket.sort_by(|a, b| 
+                            Node::key_distance(_target_key,a.id).partial_cmp(&Node::key_distance(_target_key, b.id)).unwrap());
+
+                        if new_zips.len() == ALPHA {
+                            break;
+                        }
+                        for elem in bucket.iter_mut() {
+                            if new_zips.len() < ALPHA && !sent.contains(&elem) && !rec.contains(&elem){
+                                sent.insert(elem.clone());
+                                new_zips.push(elem.clone());
+                            }
+                        }
+                        if dist == 63 {
+                            break;
+                        }
+                        dist+=1;
+                    }
+                    // let mut new_zips = Vec::new();
+                    // // Add k_closest to sent set
+                    // for zip in k_closest {
+                    //     if !rec.contains(&zip) && !sent.contains(&zip) {
+                    //         sent.insert(zip.clone());
+                    //         new_zips.push(zip.clone());
+                    //         // Return at most only ALPHA requests
+                    //         if new_zips.len() == ALPHA {
+                    //             break;
+                    //         }
+                    //     }
+                    // }
+                    // sent.remove(&rec_zip);
+                    // rec.insert(rec_zip.clone());
 
                     match opt_val {
                         // Send store rpcs or continue searching
@@ -218,8 +242,8 @@ impl ZipNode {
         }
 
         if main_node.kbuckets[i].len() == K_SIZE {
-            main_node.kbuckets[i].pop();
-            main_node.kbuckets[i].push(zip_node);
+            // main_node.kbuckets[i].pop();
+            // main_node.kbuckets[i].push(zip_node);
         } else {
             main_node.kbuckets[i].push(zip_node);
         }
