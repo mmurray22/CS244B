@@ -12,7 +12,6 @@ use std::env;
 use std::io::{self};
 
 pub mod nodes;
-pub mod routing;
 pub mod kademlia;
 pub mod test_harness;
 
