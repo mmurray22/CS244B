@@ -3,7 +3,7 @@ CS 244B project
 
 ![](https://github.com/mmurray22/CS244B/workflows/Rust/badge.svg?event=push)
 
-Objective: Recreate an performance test Kademlia DHT in Rust
+Objective: Recreate Kademlia DHT in Rust
 
 ## Running the testing harness and our rust implementation:
  After cloning, run `cargo run` from terminal. This will start up 100 nodes which will each add themselves to the network correctly. At this point you should be able to input commands to the testing harness. Each node is identified by its "IP" string. Nodes with "IP" 0 through 99 will be created.
