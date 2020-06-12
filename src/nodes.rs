@@ -225,7 +225,7 @@ impl ZipNode {
             }
         }
 
-        // No LRU eviction atmg
+        // No LRU eviction atm
         if main_node.kbuckets[i].len() == K_SIZE {
             // main_node.kbuckets[i].pop();
             // main_node.kbuckets[i].push(zip_node);
