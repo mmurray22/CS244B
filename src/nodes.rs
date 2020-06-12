@@ -233,7 +233,7 @@ impl ZipNode {
         //1. If the above checks all fail, then you can add the ZipNode to the kbucket!
         let i = Node::key_distance(main_node.id, zip_node.id);
 
-        // No LRU eviction atm
+        
         for j in 0..main_node.kbuckets[i].len() {
             if main_node.kbuckets[i][j] == zip_node {
                 main_node.kbuckets[i].remove(j);
@@ -241,6 +241,7 @@ impl ZipNode {
             }
         }
 
+        // No LRU eviction atmg
         if main_node.kbuckets[i].len() == K_SIZE {
             // main_node.kbuckets[i].pop();
             // main_node.kbuckets[i].push(zip_node);
