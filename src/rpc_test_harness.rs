@@ -1,4 +1,4 @@
-/*For testing communication over threads*/
+/*For initial testing communication over threads*/
 use std::thread;
 use std::time::Duration;
 use std::sync::mpsc;

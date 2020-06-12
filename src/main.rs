@@ -11,10 +11,9 @@ extern crate serde_derive;
 use std::env;
 use std::io::{self};
 
-mod nodes;
-mod routing;
-mod kademlia;
-mod test_harness;
+pub mod nodes;
+pub mod kademlia;
+pub mod test_harness;
 
 pub const DEFAULT_PORT: u64 = 444;
 
@@ -52,7 +51,7 @@ fn run_test_harness() {
 
         // parses input and sends rpc
         match io::stdin().read_line(&mut input) {
-            Ok(n) => {
+            Ok(_n) => {
                 let split = input.split_whitespace();
                 let args = split.collect::<Vec<&str>>();
                 if args.len() == 0 {break;}

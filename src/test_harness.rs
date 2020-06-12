@@ -160,7 +160,7 @@ fn handle(current: &mut Box<kademlia::nodes::Node>, rpc: kademlia::RPCMessage,
 	let replys = match rpc.payload {
 		kademlia::RPCType::Debug => debug(rpc, current),
 		kademlia::RPCType::KillNode => debug(rpc, current),
-		_ => rpc.recieve_rpc(current),
+		_ => rpc.receive_rpc(current),
 	};
 
 	// Sends all replys 
@@ -179,7 +179,7 @@ fn handle(current: &mut Box<kademlia::nodes::Node>, rpc: kademlia::RPCMessage,
 fn debug(rpc: kademlia::RPCMessage, node: &Box<kademlia::nodes::Node>) -> Vec<(String,kademlia::RPCMessage)> {
 	match rpc.payload {
 		kademlia::RPCType::Debug => {
-			println!("Node {:?} recieved debug from {:?}", 
+			println!("Node {:?} received debug from {:?}", 
 			kademlia::nodes::Node::get_id(node),
 			rpc.caller_node.ip);
 		}
