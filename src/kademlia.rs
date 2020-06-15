@@ -52,7 +52,7 @@ impl RPCMessage {
     }
 
 
-    fn ping_reply(&self, current: &mut Box<nodes::Node>) 
+    fn ping_reply(&self, _current: &mut Box<nodes::Node>) 
             -> Vec<(String,RPCMessage)> {
         // println!("PingACk from {:?} to {:?}",self.caller_node.ip, current.get_ip());
 
@@ -137,7 +137,7 @@ impl RPCMessage {
                 }
 
                 let (zips, val, val_flag, done_flag) = 
-                    current.lookup_update(self.caller_node.clone(), k_closest, target_key, lookup_key);
+                    current.lookup_update(self.caller_node.clone(), target_key, lookup_key);
 
                 if done_flag {
                     if val_flag {

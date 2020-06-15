@@ -83,6 +83,8 @@ impl Node {
     pub fn find_closest(&mut self, target_id: u64, max_size: usize) -> Vec<ZipNode>{
         let mut ret_vec = Vec::with_capacity(K_SIZE);
         let mut dist = Node::key_distance(self.id, target_id);
+
+        let start = dist;
         
         loop {
             let mut bucket = self.kbuckets[dist].clone();
@@ -99,10 +101,13 @@ impl Node {
                     break;
                 }
             }
-            if dist == 63 {
+            dist+=1;
+            if dist == 64 {
+                dist = 0;
+            }
+            if start == dist {
                 break;
             }
-            dist+=1;
         }
         return ret_vec;
     }
@@ -124,7 +129,7 @@ impl Node {
 
     // Takes in the zip node it recieved an RPC from, its k_closest nodes, and a lookup key
     // Returns a vector of zipnode replys, possibly a value, 
-    pub fn lookup_update(&mut self, rec_zip: ZipNode, k_closest: Vec<ZipNode>, 
+    pub fn lookup_update(&mut self, rec_zip: ZipNode, 
         _target_key:u64, lookup_key: u64) -> (Vec<ZipNode>, u64, bool, bool) {
         
         match self.lookup_map.get_mut(&lookup_key) {
@@ -136,6 +141,7 @@ impl Node {
 
                     let mut new_zips = Vec::new();
                     let mut dist = Node::key_distance(self.id, _target_key);
+                    let start = dist;
                     loop {
                         let mut bucket = self.kbuckets[dist].clone();
                         bucket.sort_by(|a, b| 
@@ -150,25 +156,15 @@ impl Node {
                                 new_zips.push(elem.clone());
                             }
                         }
-                        if dist == 63 {
+
+                        dist+=1;
+                        if dist == 64 {
+                            dist = 0;
+                        }
+                        if start == dist {
                             break;
                         }
-                        dist+=1;
                     }
-                    // let mut new_zips = Vec::new();
-                    // // Add k_closest to sent set
-                    // for zip in k_closest {
-                    //     if !rec.contains(&zip) && !sent.contains(&zip) {
-                    //         sent.insert(zip.clone());
-                    //         new_zips.push(zip.clone());
-                    //         // Return at most only ALPHA requests
-                    //         if new_zips.len() == ALPHA {
-                    //             break;
-                    //         }
-                    //     }
-                    // }
-                    // sent.remove(&rec_zip);
-                    // rec.insert(rec_zip.clone());
 
                     match opt_val {
                         // Send store rpcs or continue searching
