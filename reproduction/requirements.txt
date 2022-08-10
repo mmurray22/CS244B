@@ -58,7 +58,7 @@ MarkupSafe==1.0
 matplotlib==3.0.3
 -e git://github.com/mininet/mininet@e0436642ae1005d2ec9f58ba698125d718072293#egg=mininet
 mistune==0.8.4
-nbconvert==5.6.1
+nbconvert==6.3.0
 nbformat==5.0.4
 netifaces==0.10.4
 networkx==2.4
